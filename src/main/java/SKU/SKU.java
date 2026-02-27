@@ -1,7 +1,5 @@
 package SKU;
 
-import java.util.ArrayList;
-
 public class SKU {
     private String skuID;
     private Location skuLocation;
