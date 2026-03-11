@@ -25,4 +25,8 @@ public class SKUList {
     public void deleteSKU(String skuID) {
         skuList.removeIf(sku -> sku.getSKUID().equals(skuID));
     }
+
+    public ArrayList<SKU> getSKUList() {
+        return skuList;
+    }
 }

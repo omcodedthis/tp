@@ -1,21 +1,30 @@
 package seedu.duke;
 
-import java.util.Scanner;
+import SKU.SKUList;
 
+/**
+ * Main entry point for ItemTasker.
+ * Initialises the data model, then runs a read-evaluate-print loop
+ * until the user types {@code bye} or {@code exit}.
+ */
 public class Duke {
+
     /**
-     * Main entry-point for the java.duke.Duke application.
+     * Application entry point.
+     *
+     * @param args Command-line arguments (unused).
      */
     public static void main(String[] args) {
-        String logo = " ____        _        \n"
-                + "|  _ \\ _   _| | _____ \n"
-                + "| | | | | | | |/ / _ \\\n"
-                + "| |_| | |_| |   <  __/\n"
-                + "|____/ \\__,_|_|\\_\\___|\n";
-        System.out.println("Hello from\n" + logo);
-        System.out.println("What is your name?");
+        SKUList skuList = new SKUList();
+        Ui ui = new Ui();
+        CommandRunner runner = new CommandRunner(skuList);
 
-        Scanner in = new Scanner(System.in);
-        System.out.println("Hello " + in.nextLine());
+        Ui.printWelcome();
+
+        while (runner.isRunning()) {
+            String input = ui.readInput();
+            ParsedCommand cmd = Parser.parse(input);
+            runner.run(cmd);
+        }
     }
 }
