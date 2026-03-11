@@ -46,7 +46,7 @@ public class SKUList {
     }
 
     /**
-     * Removes all SKUs from the list that match the specified SKU ID.
+     * Removes the SKU from the list that match the specified SKU ID.
      *
      * @param skuID The unique alphanumeric identifier of the SKU to be removed.
      */
