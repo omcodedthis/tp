@@ -1,18 +1,10 @@
-package seedu.duke;
+package ui;
 
 import SKU.SKUList;
 
-/**
- * Main entry point for ItemTasker.
- * Initialises the data model, then runs a read-evaluate-print loop
- * until the user types {@code bye} or {@code exit}.
- */
-public class Duke {
-
+public class ItemTasker {
     /**
-     * Application entry point.
-     *
-     * @param args Command-line arguments (unused).
+     * Main entry-point for the java.duke.ItemTasker application.
      */
     public static void main(String[] args) {
         SKUList skuList = new SKUList();
