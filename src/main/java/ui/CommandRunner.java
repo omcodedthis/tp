@@ -16,9 +16,8 @@ import sku.SKUList;
 import skutask.Priority;
 import skutask.SKUTask;
 import skutask.SKUTaskList;
+import skutask.ViewSKUTask;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,12 +31,16 @@ import java.util.Map;
  */
 public class CommandRunner {
 
-    /** Set false to stop the main loop. */
+    /**
+     * Set false to stop the main loop.
+     */
     private boolean isRunning;
 
     private final SKUList skuList;
 
-    /** Internal task storage keyed by SKU_ID. */
+    /**
+     * Internal task storage keyed by SKU_ID.
+     */
     private final HashMap<String, SKUTaskList> taskMap;
 
     /**
@@ -304,144 +307,91 @@ public class CommandRunner {
      * If no flags are provided, it defaults to showing all tasks across all SKUs.
      *
      * @param cmd The parsed command containing the view filter arguments.
-     * @throws InvalidCommandException  If the provided view filter arguments are invalid.
-     * @throws EmptyListException       If the resulting view contains no tasks.
-     * @throws SKUNotFoundException     If a requested SKU filter cannot be found.
+     * @throws InvalidCommandException If the provided view filter arguments are invalid.
+     * @throws EmptyListException      If the resulting view contains no tasks.
+     * @throws SKUNotFoundException    If a requested SKU filter cannot be found.
      */
     private void handleListTasks(ParsedCommand cmd) throws InvalidCommandException, EmptyListException,
             SKUNotFoundException {
-        if (cmd.hasArg("n")) {
-            listTasksBySku(cmd.getArg("n"));
-        } else if (cmd.hasArg("p")) {
-            listTasksByPriority(cmd.getArg("p"));
-        } else if (cmd.hasArg("l")) {
-            listTasksByDistance(cmd.getArg("l"));
-        } else {
-            listAllTasks();
-        }
-    }
+        ViewSKUTask viewer = new ViewSKUTask();
+        String n = cmd.getArg("n");
+        String p = cmd.getArg("p");
+        String l = cmd.getArg("l");
+        viewer.setSkuFilter(n);
+        viewer.setPriorityFilter(p);
+        viewer.setLocationFilter(l);
 
-    /**
-     * Prints all tasks associated with a specific SKU.
-     *
-     * @param skuId The ID of the SKU to look up.
-     * @throws SKUNotFoundException If the specified SKU cannot be found.
-     * @throws EmptyListException   If the specified SKU currently has no tasks.
-     */
-    private void listTasksBySku(String skuId) throws SKUNotFoundException, EmptyListException {
-        SKUTaskList taskList = taskMap.get(skuId.toUpperCase());
-        if (taskList == null || taskList.isEmpty()) {
-            Ui.printInfo("No tasks found for SKU: " + skuId.toUpperCase());
-            return;
-        }
-        System.out.println(" Tasks for SKU [" + skuId.toUpperCase() + "]:");
-        Ui.printDivider();
-        taskList.printSKUTaskList();
-        Ui.printDivider();
-    }
+        List<SKUTask> results = viewer.listTasks(this.skuList, this.taskMap);
 
-    /**
-     * Prints all tasks across all SKUs that match the specified priority level.
-     *
-     * @param priorityStr The priority string to filter by (HIGH, MEDIUM, or LOW).
-     * @throws InvalidCommandException If the priority format is invalid.
-     * @throws EmptyListException      If no tasks in the warehouse match the filter.
-     */
-    private void listTasksByPriority(String priorityStr) throws InvalidCommandException, EmptyListException {
-        Priority filter;
-        try {
-            filter = Priority.valueOf(priorityStr.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            Ui.printError("Invalid priority '" + priorityStr + "'. Use HIGH, MEDIUM, or LOW.");
-            return;
-        }
+        if (n != null) {
+            SKUTaskList taskList = taskMap.get(n.toUpperCase());
+            if (taskList == null || taskList.isEmpty()) {
+                Ui.printInfo("No tasks found for SKU: " + n.toUpperCase());
+                return;
+            }
+            System.out.println(" Tasks for SKU [" + n.toUpperCase() + "]:");
+            Ui.printDivider();
+            for (int i = 0; i < results.size(); i++) {
+                System.out.println((i + 1) + ". " + results.get(i));
+            }
+            Ui.printDivider();
 
-        System.out.println(" Tasks with priority [" + filter + "]:");
-        Ui.printDivider();
+        } else if (p != null) {
+            try {
+                Priority.valueOf(p.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                Ui.printError("Invalid priority '" + p + "'. Use HIGH, MEDIUM, or LOW.");
+                return;
+            }
+            System.out.println(" Tasks with priority [" + p.toUpperCase() + "]:");
+            Ui.printDivider();
+            if (results.isEmpty()) {
+                Ui.printInfo("No tasks found with priority: " + p.toUpperCase());
+            } else {
+                results.forEach(t -> System.out.println("  [SKU: " + t.getSKUTaskID() + "] " + t));
+            }
+            Ui.printDivider();
 
-        int count = 0;
-        for (Map.Entry<String, SKUTaskList> entry : taskMap.entrySet()) {
-            for (SKUTask task : entry.getValue().getSKUTaskList()) {
-                if (task.getSKUTaskPriority() == filter) {
-                    System.out.println("  [SKU: " + entry.getKey() + "] " + task);
-                    count++;
+        } else if (l != null) {
+            sku.Location from;
+            try {
+                from = sku.Location.valueOf(l.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                Ui.printError("Invalid location '" + l + "'. Must be one of: A1 A2 A3 B1 B2 B3 C1 C2 C3");
+                return;
+            }
+            System.out.println(" Tasks sorted by distance from [" + from + "]:");
+            Ui.printDivider();
+            if (results.isEmpty()) {
+                Ui.printInfo("No tasks found.");
+            } else {
+                for (SKUTask t : results) {
+                    SKU skuObj = findSku(t.getSKUTaskID());
+                    if (skuObj == null) {
+                        continue;
+                    }
+                    int dist = viewer.calculateDistance(t, l, this.skuList);
+                    System.out.printf("  [SKU: %-25s | dist=%-2d] %s%n", t.getSKUTaskID(), dist, t);
                 }
             }
-        }
+            Ui.printDivider();
 
-        if (count == 0) {
-            Ui.printInfo("No tasks found with priority: " + filter);
-        }
-        Ui.printDivider();
-    }
-
-    /**
-     * Prints all tasks across all SKUs sorted by their Manhattan distance from a specified warehouse sector.
-     *
-     * @param fromStr The starting location sector (e.g. "B2").
-     * @throws InvalidCommandException If the location format is invalid.
-     * @throws EmptyListException      If there are no tasks available to sort.
-     */
-    private void listTasksByDistance(String fromStr) throws SKUNotFoundException {
-        Location from;
-        try {
-            from = Location.valueOf(fromStr.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            Ui.printError("Invalid location '" + fromStr + "'. Must be one of: A1 A2 A3 B1 B2 B3 C1 C2 C3");
-            return;
-        }
-
-        List<TaskEntry> entries = new ArrayList<>();
-
-        for (Map.Entry<String, SKUTaskList> entry : taskMap.entrySet()) {
-            SKU sku = findSku(entry.getKey());
-            if (sku == null) {
-                continue;
-            }
-            int dist = manhattanDistance(from, sku.getSKULocation());
-            for (SKUTask task : entry.getValue().getSKUTaskList()) {
-                entries.add(new TaskEntry(entry.getKey(), task, dist));
-            }
-        }
-
-        entries.sort(Comparator.comparingInt(e -> e.distance));
-
-        System.out.println(" Tasks sorted by distance from [" + from + "]:");
-        Ui.printDivider();
-
-        if (entries.isEmpty()) {
-            Ui.printInfo("No tasks found.");
         } else {
-            for (TaskEntry e : entries) {
-                System.out.printf("  [SKU: %-25s | dist=%-2d] %s%n",
-                        e.skuId, e.distance, e.task);
+            System.out.println(" All tasks:");
+            Ui.printDivider();
+            boolean anyTasks = false;
+            for (Map.Entry<String, SKUTaskList> entry : taskMap.entrySet()) {
+                if (!entry.getValue().isEmpty()) {
+                    System.out.println(" SKU [" + entry.getKey() + "]:");
+                    entry.getValue().printSKUTaskList();
+                    anyTasks = true;
+                }
             }
-        }
-        Ui.printDivider();
-    }
-
-    /**
-     * Prints every task currently tracked in the system, grouped by their respective SKUs.
-     *
-     * @throws EmptyListException If the system currently tracks no tasks across any SKUs.
-     */
-    private void listAllTasks() throws EmptyListException {
-        System.out.println(" All tasks:");
-        Ui.printDivider();
-
-        boolean anyTasks = false;
-        for (Map.Entry<String, SKUTaskList> entry : taskMap.entrySet()) {
-            if (!entry.getValue().isEmpty()) {
-                System.out.println(" SKU [" + entry.getKey() + "]:");
-                entry.getValue().printSKUTaskList();
-                anyTasks = true;
+            if (!anyTasks) {
+                Ui.printInfo("No tasks in the system yet.");
             }
+            Ui.printDivider();
         }
-
-        if (!anyTasks) {
-            Ui.printInfo("No tasks in the system yet.");
-        }
-        Ui.printDivider();
     }
 
     /**
@@ -487,19 +437,4 @@ public class CommandRunner {
         }
     }
 
-    /**
-     * Computes the Manhattan distance between two locations on the 3x3 warehouse grid.
-     * The grid uses letters (A, B, C) for rows and digits (1, 2, 3) for columns.
-     *
-     * @param a The starting location sector.
-     * @param b The target location sector.
-     * @return The calculated Manhattan distance as an integer.
-     */
-    private int manhattanDistance(Location a, Location b) {
-        int rowA = a.name().charAt(0) - 'A';
-        int colA = Character.getNumericValue(a.name().charAt(1)) - 1;
-        int rowB = b.name().charAt(0) - 'A';
-        int colB = Character.getNumericValue(b.name().charAt(1)) - 1;
-        return Math.abs(rowA - rowB) + Math.abs(colA - colB);
-    }
 }
