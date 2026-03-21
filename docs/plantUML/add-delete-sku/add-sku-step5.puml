@@ -1,0 +1,23 @@
+@startuml
+!include ../style.puml
+show members
+hide empty members
+
+package "System Memory State (Step 5)" {
+    object "<u>runner:CommandRunner</u>" as runner
+    object "<u>skuList:SKUList</u>" as skuList
+    object "<u>taskMap:HashMap</u>" as taskMap
+
+    object "<u>newSku:SKU</u>" as sku {
+        skuID = "PALLET-A"
+        skuLocation = Location.A1
+    }
+
+    object "<u>emptyList:SKUTaskList</u>" as taskList
+}
+
+runner -down-> skuList
+runner -down-> taskMap
+skuList -down-> sku : contains >
+taskMap -down-> taskList : ["PALLET-A"] >
+@enduml

@@ -1,0 +1,31 @@
+@startuml
+!include ../style.puml
+
+Actor User as user USER_COLOR
+Participant ":Ui" as ui UI_COLOR
+Participant ":Parser" as parser LOGIC_COLOR_T1
+Participant ":CommandRunner" as runner LOGIC_COLOR
+Participant ":SKUList" as skuList MODEL_COLOR
+Participant ":SKU" as sku MODEL_COLOR_T1
+Participant ":HashMap" as taskMap MODEL_COLOR_T2
+
+user -> ui ++ : "addsku n/PALLET-A l/A1"
+ui -> parser ++ : parse("addsku n/PALLET-A l/A1")
+return cmd : ParsedCommand
+
+ui -> runner ++ : run(cmd)
+runner -> runner ++ : handleAddSku(cmd)
+runner -> runner ++ : Location.valueOf("A1")
+return location
+
+runner -> skuList ++ : addSKU("PALLET-A", location)
+skuList -> sku ** : create("PALLET-A", location)
+return
+
+runner -> taskMap ++ : put("PALLET-A", emptyTaskList)
+return
+
+return
+return
+return display success message
+@enduml

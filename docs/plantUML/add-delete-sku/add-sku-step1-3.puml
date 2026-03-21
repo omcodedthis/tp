@@ -1,0 +1,20 @@
+@startuml
+!include ../style.puml
+show members
+hide empty members
+
+package "System Memory State (Steps 1 to 3)" {
+    object "<u>runner:CommandRunner</u>" as runner
+    object "<u>skuList:SKUList</u>" as skuList
+    object "<u>taskMap:HashMap</u>" as taskMap
+}
+
+runner -down-> skuList
+runner -down-> taskMap
+
+note right of runner
+  ParsedCommand and Location
+  are currently local variables.
+  Domain state is unchanged.
+end note
+@enduml
