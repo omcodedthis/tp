@@ -52,22 +52,22 @@ The following class diagram shows the architecture:
 **Aspect: How SKU tasks are stored and mapped to their parent SKU:**
 
 * **Current Implementation:** Require all task operations to access the `SKUTaskList` directly through the `SKU` object residing in the `SKUList`.
-  * *Pros:* High cohesion and strict encapsulation. A SKU is solely responsible for its own tasks. Memory overhead is reduced, and state mutations are safer as there is no need to synchronize deletions across multiple data structures.
-  * *Cons:* Slightly slower lookup times, as finding a task requires iterating through the `SKUList` to locate the parent SKU first (O(n) complexity).
+    * *Pros:* High cohesion and strict encapsulation. A SKU is solely responsible for its own tasks. Memory overhead is reduced, and state mutations are safer as there is no need to synchronize deletions across multiple data structures.
+    * *Cons:* Slightly slower lookup times, as finding a task requires iterating through the `SKUList` to locate the parent SKU first (O(n) complexity).
 * **Alternative:** Maintain a `HashMap<String, SKUTaskList>` inside the `CommandRunner` to map SKU IDs to their tasks.
-  * *Pros:* Fast, O(1) time complexity when looking up tasks for a specific SKU during filtering or task addition.
-  * *Cons:* Severe data duplication and poor encapsulation. This requires the `CommandRunner` to juggle references and manually synchronize deletions across two separate data structures, leading to an architecture prone to orphaned tasks if not correctly synced.
+    * *Pros:* Fast, O(1) time complexity when looking up tasks for a specific SKU during filtering or task addition.
+    * *Cons:* Severe data duplication and poor encapsulation. This requires the `CommandRunner` to juggle references and manually synchronize deletions across two separate data structures, leading to an architecture prone to orphaned tasks if not correctly synced.
 
 ### Add / Delete SKU Task Feature
 
 #### Implementation Details
 
-The Add and Delete SKU Task operations are facilitated by the `CommandRunner` component, which routes execution to the specific SKU identified by the user, and subsequently down to that SKU's `SKUTaskList`. The `SKUTaskList` internally manages an `ArrayList<SKUTask>` and delegates data updates to the underlying `SKUTask` instances. The properties for a task include its ID, due date, completion status, and importantly, its `Priority` (an enum of HIGH, MEDIUM, or LOW). Following strict access boundaries, `SKUTaskList` does not expose its raw collection but instead provides safe wrapper methods.
+The Add and Delete SKU Task operations are facilitated by the `CommandRunner` component, which routes execution to the specific SKU identified by the user, and subsequently down to that SKU's `SKUTaskList`. The `SKUTaskList` internally manages an `ArrayList<SKUTask>` and delegates data updates to the underlying `SKUTask` instances. The properties for a task include its ID, due date, completion status, and importantly, its `Priority` (an enum of HIGH, MEDIUM, or LOW). The `SKUTaskList` provides internal wrapper methods for additions, deletions, and modifications to enforce safe encapsulation.
 
-The operations are exposed and handled internally via the following flow:
+The operations are handled internally via the following flow:
 
-* `CommandRunner#handleAddSkuTask(ParsedCommand)` — Extracts the targeted SKU ID and the task properties (including `Priority`). It validates the SKU's existence and delegates to `SKUTaskList#addSKUTask()` to instantiate a new `SKUTask`.
-* `CommandRunner#handleDeleteTask(ParsedCommand)` — Locates the SKU, validates the target task index, and instructs `SKUTaskList#deleteSKUTaskByIndex()` to remove the task from the internal array.
+* `CommandRunner#handleAddSkuTask(ParsedCommand)` — Extracts the targeted SKU ID and the task properties (including `Priority`). It calls `CommandRunner#findSku()` to validate the SKU's existence and delegates to `SKUTaskList#addSKUTask()` to instantiate a new `SKUTask`.
+* `CommandRunner#handleDeleteTask(ParsedCommand)` — Calls `CommandRunner#findSku()` to locate the SKU, validates the target task index, and instructs `SKUTaskList#deleteSKUTaskByIndex()` to remove the task from the internal array.
 
 Given below is an example usage scenario demonstrating how the Add SKU Task mechanism behaves step-by-step.
 
@@ -114,11 +114,11 @@ The following class diagram shows the architecture connecting the `CommandRunner
 **Aspect: Managing task modifications via `SKUTaskList` wrappers versus returning internal objects:**
 
 * **Current Implementation:** `SKUTaskList` handles modification duties in place (e.g., reading indices inside `editSKUTask` and mapping updates, working directly with enums like `Priority`).
-  * *Pros:* Strong encapsulation. `SKUTaskList` dictates precisely how a task is safely modified, without leaking mutable object references back to caller-components.
-  * *Cons:* Requires additional boilerplate wrapper methods inside `SKUTaskList` just to pass down simple enum updates (`Priority`) or strings to the internal tasks.
+    * *Pros:* Strong encapsulation. `SKUTaskList` dictates precisely how a task is safely modified, without leaking mutable object references back to caller-components.
+    * *Cons:* Requires additional boilerplate wrapper methods inside `SKUTaskList` just to pass down simple enum updates (`Priority`) or strings to the internal tasks.
 * **Alternative:** Expose `getTask(index)` method from `SKUTaskList`, letting callers (e.g., `CommandRunner`) modify the returned `SKUTask` object directly.
-  * *Pros:* Simpler logic to write, heavily reducing the number of pass-through methods in `SKUTaskList`.
-  * *Cons:* Weakens data coupling boundaries. A caller command might hold onto a `SKUTask` and accidentally modify it asynchronously outside of the defined safe access points, compromising system stability.
+    * *Pros:* Simpler logic to write, heavily reducing the number of pass-through methods in `SKUTaskList`.
+    * *Cons:* Weakens data coupling boundaries. A caller command might hold onto a `SKUTask` and accidentally modify it asynchronously outside of the defined safe access points, compromising system stability.
 
 ### Mark / Unmark SKU Task Feature
 
@@ -162,11 +162,11 @@ The following class diagram shows the architecture:
 **Aspect: Pre-condition check before toggling state:**
 
 * **Current Implementation:** `handleMarkTask()` and `handleUnmarkTask()` check `isDone()` on the task before delegating, rejecting redundant operations with an info message.
-  * *Pros:* Prevents silent no-ops that could confuse users (e.g., marking an already-done task with no feedback).
-  * *Cons:* Requires an extra read call to `isDone()` before the write, slightly increasing coupling between `CommandRunner` and `SKUTask` state.
+    * *Pros:* Prevents silent no-ops that could confuse users (e.g., marking an already-done task with no feedback).
+    * *Cons:* Requires an extra read call to `isDone()` before the write, slightly increasing coupling between `CommandRunner` and `SKUTask` state.
 * **Alternative:** Delegate the guard check into `SKUTaskList` or `SKUTask` itself, throwing an exception on invalid toggle.
-  * *Pros:* Encapsulates the guard closer to the data.
-  * *Cons:* Requires exception propagation for a non-exceptional condition, which adds overhead and complicates the call chain.
+    * *Pros:* Encapsulates the guard closer to the data.
+    * *Cons:* Requires exception propagation for a non-exceptional condition, which adds overhead and complicates the call chain.
 
 ## Appendix A: Product Scope
 
