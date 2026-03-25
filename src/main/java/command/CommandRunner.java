@@ -218,7 +218,8 @@ public class CommandRunner {
     /**
      * Parses arguments and adds a new task to a specific SKU.
      *
-     * @param cmd The parsed command containing the SKU ID, due date, and optional priority.
+     * @param cmd The parsed command containing the SKU ID, due date, and optional
+     *            priority.
      * @throws MissingArgumentException If required arguments (SKU ID or due date) are missing.
      * @throws SKUNotFoundException     If the specified SKU does not exist in the warehouse.
      */
@@ -253,10 +254,8 @@ public class CommandRunner {
         taskList.addSKUTask(skuId.toUpperCase(), priority, dueDate, description);
         int newIndex = taskList.getSize();
 
-        Ui.printSuccess("Added task #" + newIndex +
-                " to SKU [" + skuId.toUpperCase() + "] | Priority: "
-                + priority + " | Due: " + dueDate
-                + (description.isEmpty() ? "" : " | Desc: " + description));
+        Ui.printSuccess("Added task #" + newIndex + " to SKU [" + skuId.toUpperCase() + "] | Priority: "
+                + priority + " | Due: " + dueDate + (description.isEmpty() ? "" : " | Desc: " + description));
     }
 
     /**
@@ -315,6 +314,7 @@ public class CommandRunner {
         SKUTask updated = taskList.getSKUTaskList().get(index - 1);
         Ui.printSuccess("Updated task #" + index + " for SKU [" + skuId.toUpperCase() + "]: " + updated);
     }
+
     /**
      * Parses arguments and deletes a specific task from an SKU based on its index.
      *

@@ -20,6 +20,11 @@ public class SKUTask {
      * @param taskDescription A text description of what this task involves.
      */
     public SKUTask(String skuTaskID, Priority priority, String dueDate, String taskDescription) {
+        assert skuTaskID != null && !skuTaskID.trim().isEmpty() : "SKU Task ID cannot be null or empty";
+        assert priority != null : "Priority cannot be null";
+        assert dueDate != null : "Due date cannot be null";
+        assert taskDescription != null : "Task description cannot be null";
+
         this.skuTaskID = skuTaskID;
         this.priority = priority;
         this.dueDate = dueDate;
