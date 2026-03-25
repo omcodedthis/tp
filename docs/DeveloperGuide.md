@@ -181,7 +181,7 @@ The feature supports three primary modes:
 
 The operations are handled internally via the following flow:
 
-* **Command Routing:** `CommandRunner#handleListTasks(ParsedCommand)` extracts the arguments, instantiates a `ViewSKUTask` object, and sets the respective filter strings.
+* **command Routing:** `CommandRunner#handleListTasks(ParsedCommand)` extracts the arguments, instantiates a `ViewSKUTask` object, and sets the respective filter strings.
 * **Data Aggregation:** `ViewSKUTask#listTasks(SKUList)` performs a full traversal of the `SKUList` to gather all available `SKUTask` objects into a "flattened" master list.
 * **Filtering & Sorting Logic:**
   * For **SKU ID** and **Priority**, the viewer applies a Java Stream filter directly on the task list. Since these properties are encapsulated within the `SKUTask` object itself, no further interaction with the Model is required.
