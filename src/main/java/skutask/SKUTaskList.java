@@ -43,6 +43,11 @@ public class SKUTaskList {
      * @param description A text description of what this task involves.
      */
     public void addSKUTask(String skuID, Priority priority, String dueDate, String description) {
+        assert skuID != null && !skuID.trim().isEmpty() : "SKU ID cannot be null or empty";
+        assert priority != null : "Priority cannot be null";
+        assert dueDate != null : "Due date cannot be null";
+        assert description != null : "Description cannot be null";
+
         SKUTask newTask = new SKUTask(skuID, priority, dueDate, description);
         skuTaskList.add(newTask);
     }
@@ -68,6 +73,10 @@ public class SKUTaskList {
      * @param description A text description of what this task involves.
      */
     public void addSKUTask(String skuID, String dueDate, String description) {
+        assert skuID != null && !skuID.trim().isEmpty() : "SKU ID cannot be null or empty";
+        assert dueDate != null : "Due date cannot be null";
+        assert description != null : "Description cannot be null";
+
         SKUTask newSkuTask = new SKUTask(skuID, dueDate, description);
         skuTaskList.add(newSkuTask);
     }
