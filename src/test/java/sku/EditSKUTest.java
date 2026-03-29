@@ -16,6 +16,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+//@@author AkshayPranav19
 public class EditSKUTest {
 
     private CommandRunner runner;
@@ -111,5 +112,67 @@ public class EditSKUTest {
     public void editsku_caseInsensitiveLocation_locationUpdated() throws ItemTaskerException, IOException {
         runner.run(buildEditSku("PALLET-A", "b2"));
         assertEquals(Location.B2, sku.getSKULocation());
+    }
+
+    @Test
+    public void editsku_allNineLocations_eachValid() throws ItemTaskerException, IOException {
+        String[] locations = {"A1", "A2", "A3", "B1", "B2", "B3", "C1", "C2", "C3"};
+        for (String loc : locations) {
+            runner.run(buildEditSku("PALLET-A", loc));
+            assertEquals(Location.valueOf(loc), sku.getSKULocation());
+        }
+    }
+
+    @Test
+    public void editsku_multipleEditsSequentially_lastLocationPersists() throws ItemTaskerException, IOException {
+        runner.run(buildEditSku("PALLET-A", "B1"));
+        runner.run(buildEditSku("PALLET-A", "C3"));
+        runner.run(buildEditSku("PALLET-A", "A2"));
+        assertEquals(Location.A2, sku.getSKULocation());
+    }
+
+    @Test
+    public void editsku_multipleSKUs_onlyTargetChanged() throws ItemTaskerException, IOException {
+        skuList.addSKU("PALLET-B", Location.B1);
+        runner.run(buildEditSku("PALLET-A", "C2"));
+        assertEquals(Location.C2, sku.getSKULocation());
+        assertEquals(Location.B1, skuList.findByID("PALLET-B").getSKULocation());
+    }
+
+    @Test
+    public void editsku_numericOnlyLocation_showsError() throws ItemTaskerException, IOException {
+        runner.run(buildEditSku("PALLET-A", "99"));
+        assertTrue(outputStream.toString().contains("[ERROR]"));
+        assertEquals(Location.A1, sku.getSKULocation());
+    }
+
+    @Test
+    public void editsku_specialCharsLocation_showsError() throws ItemTaskerException, IOException {
+        runner.run(buildEditSku("PALLET-A", "@#$"));
+        assertTrue(outputStream.toString().contains("[ERROR]"));
+        assertEquals(Location.A1, sku.getSKULocation());
+    }
+
+    @Test
+    public void editsku_mixedCaseSkuAndLocation_success() throws ItemTaskerException, IOException {
+        runner.run(buildEditSku("Pallet-A", "b3"));
+        assertEquals(Location.B3, sku.getSKULocation());
+        assertTrue(outputStream.toString().contains("[OK]"));
+    }
+
+    @Test
+    public void editsku_editAfterError_locationCorrectlyUpdated() throws ItemTaskerException, IOException {
+        runner.run(buildEditSku("PALLET-A", "INVALID"));
+        assertEquals(Location.A1, sku.getSKULocation());
+        runner.run(buildEditSku("PALLET-A", "B2"));
+        assertEquals(Location.B2, sku.getSKULocation());
+    }
+
+    @Test
+    public void editsku_withTasksPresent_tasksPreservedAfterEdit() throws ItemTaskerException, IOException {
+        sku.getSKUTaskList().addSKUTask("PALLET-A", skutask.Priority.HIGH, "2026-06-01", "check");
+        runner.run(buildEditSku("PALLET-A", "C2"));
+        assertEquals(Location.C2, sku.getSKULocation());
+        assertEquals(1, sku.getSKUTaskList().getSize());
     }
 }

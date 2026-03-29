@@ -2,6 +2,7 @@ package ui;
 
 import command.CommandRunner;
 import command.ParsedCommand;
+import exception.InvalidIndexException;
 import exception.ItemTaskerException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,8 +20,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+//@@author AkshayPranav19
 public class SKUTaskMarkUnmarkTest {
 
     private CommandRunner runner;
@@ -50,8 +53,12 @@ public class SKUTaskMarkUnmarkTest {
 
     private ParsedCommand buildCommand(String commandWord, String skuId, String index) {
         Map<String, String> args = new HashMap<>();
-        args.put("n", skuId);
-        args.put("i", index);
+        if (skuId != null) {
+            args.put("n", skuId);
+        }
+        if (index != null) {
+            args.put("i", index);
+        }
         return new ParsedCommand(commandWord, args);
     }
 
@@ -71,7 +78,7 @@ public class SKUTaskMarkUnmarkTest {
     }
 
     @Test
-    public void marktask_alreadyMarked_showsError() throws ItemTaskerException, IOException {
+    public void marktask_alreadyMarked_showsInfo() throws ItemTaskerException, IOException {
         runner.run(buildCommand("marktask", "SKU-001", "1"));
         runner.run(buildCommand("marktask", "SKU-001", "1"));
         String output = outputStream.toString();
@@ -79,8 +86,93 @@ public class SKUTaskMarkUnmarkTest {
     }
 
     @Test
-    public void unmarktask_alreadyUnmarked_showsError() throws ItemTaskerException, IOException {
+    public void unmarktask_alreadyUnmarked_showsInfo() throws ItemTaskerException, IOException {
         runner.run(buildCommand("unmarktask", "SKU-001", "1"));
         assertTrue(outputStream.toString().contains("[INFO]") && outputStream.toString().contains("already unmarked"));
     }
+
+    @Test
+    public void marktask_validTask_showsSuccessAndTaskIsDone() throws ItemTaskerException, IOException {
+        runner.run(buildCommand("marktask", "SKU-001", "1"));
+        assertTrue(outputStream.toString().contains("[OK]"));
+        assertTrue(skuList.getSKUList().get(0).getSKUTaskList().getSKUTaskList().get(0).isDone());
+    }
+
+    @Test
+    public void unmarktask_afterMark_showsSuccessAndTaskIsNotDone() throws ItemTaskerException, IOException {
+        runner.run(buildCommand("marktask", "SKU-001", "1"));
+        outputStream.reset();
+        runner.run(buildCommand("unmarktask", "SKU-001", "1"));
+        assertTrue(outputStream.toString().contains("[OK]"));
+        assertFalse(skuList.getSKUList().get(0).getSKUTaskList().getSKUTaskList().get(0).isDone());
+    }
+
+    @Test
+    public void marktask_missingSkuId_showsError() throws ItemTaskerException, IOException {
+        runner.run(buildCommand("marktask", null, "1"));
+        assertTrue(outputStream.toString().contains("[ERROR]"));
+    }
+
+    @Test
+    public void marktask_missingIndex_showsError() throws ItemTaskerException, IOException {
+        runner.run(buildCommand("marktask", "SKU-001", null));
+        assertTrue(outputStream.toString().contains("[ERROR]"));
+    }
+
+    @Test
+    public void unmarktask_missingSkuId_showsError() throws ItemTaskerException, IOException {
+        runner.run(buildCommand("unmarktask", null, "1"));
+        assertTrue(outputStream.toString().contains("[ERROR]"));
+    }
+
+    @Test
+    public void unmarktask_missingIndex_showsError() throws ItemTaskerException, IOException {
+        runner.run(buildCommand("unmarktask", "SKU-001", null));
+        assertTrue(outputStream.toString().contains("[ERROR]"));
+    }
+
+    @Test
+    public void marktask_skuNotFound_showsError() throws ItemTaskerException, IOException {
+        runner.run(buildCommand("marktask", "GHOST-SKU", "1"));
+        assertTrue(outputStream.toString().contains("[ERROR]"));
+    }
+
+    @Test
+    public void unmarktask_skuNotFound_showsError() throws ItemTaskerException, IOException {
+        runner.run(buildCommand("unmarktask", "GHOST-SKU", "1"));
+        assertTrue(outputStream.toString().contains("[ERROR]"));
+    }
+
+    @Test
+    public void marktask_nonNumericIndex_showsError() throws ItemTaskerException, IOException {
+        runner.run(buildCommand("marktask", "SKU-001", "abc"));
+        assertTrue(outputStream.toString().contains("[ERROR]"));
+    }
+
+    @Test
+    public void unmarktask_nonNumericIndex_showsError() throws ItemTaskerException, IOException {
+        runner.run(buildCommand("unmarktask", "SKU-001", "abc"));
+        assertTrue(outputStream.toString().contains("[ERROR]"));
+    }
+
+    @Test
+    public void marktask_thenUnmark_taskIsNotDone() throws ItemTaskerException, IOException {
+        runner.run(buildCommand("marktask", "SKU-001", "1"));
+        runner.run(buildCommand("unmarktask", "SKU-001", "1"));
+        assertFalse(skuList.getSKUList().get(0).getSKUTaskList().getSKUTaskList().get(0).isDone());
+    }
+
+    @Test
+    public void marktask_indexOutOfBounds_throwsInvalidIndexException() {
+        assertThrows(InvalidIndexException.class, () ->
+                runner.run(buildCommand("marktask", "SKU-001", "5")));
+    }
+
+    @Test
+    public void unmarktask_indexOutOfBounds_throwsInvalidIndexException() {
+        assertThrows(InvalidIndexException.class, () ->
+                runner.run(buildCommand("unmarktask", "SKU-001", "5")));
+    }
+
+
 }
