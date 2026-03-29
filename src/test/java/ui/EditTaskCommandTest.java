@@ -2,6 +2,7 @@ package ui;
 
 import command.CommandRunner;
 import command.ParsedCommand;
+import exception.InvalidIndexException;
 import exception.ItemTaskerException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,8 +20,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+//@@author AkshayPranav19
 public class EditTaskCommandTest {
 
     private CommandRunner runner;
@@ -51,8 +54,12 @@ public class EditTaskCommandTest {
     private ParsedCommand buildEditTask(String skuId, String index, String date,
                                         String priority, String desc) {
         Map<String, String> args = new HashMap<>();
-        args.put("n", skuId);
-        args.put("i", index);
+        if (skuId != null) {
+            args.put("n", skuId);
+        }
+        if (index != null) {
+            args.put("i", index);
+        }
         if (date != null) {
             args.put("d", date);
         }
@@ -117,5 +124,57 @@ public class EditTaskCommandTest {
     public void edittask_successMessage_shown() throws ItemTaskerException, IOException {
         runner.run(buildEditTask("PALLET-A", "1", "2026-12-31", null, null));
         assertTrue(outputStream.toString().contains("[OK]"));
+    }
+
+    @Test
+    public void edittask_missingSkuId_showsError() throws ItemTaskerException, IOException {
+        runner.run(buildEditTask(null, "1", "2027-01-01", null, null));
+        assertTrue(outputStream.toString().contains("[ERROR]"));
+    }
+
+    @Test
+    public void edittask_missingIndex_showsError() throws ItemTaskerException, IOException {
+        runner.run(buildEditTask("PALLET-A", null, "2027-01-01", null, null));
+        assertTrue(outputStream.toString().contains("[ERROR]"));
+    }
+
+    @Test
+    public void edittask_outOfRangeIndex_throwsInvalidIndexException() {
+        assertThrows(InvalidIndexException.class, () ->
+                runner.run(buildEditTask("PALLET-A", "99", null, "LOW", null)));
+    }
+
+    @Test
+    public void edittask_nonNumericIndex_showsError() throws ItemTaskerException, IOException {
+        runner.run(buildEditTask("PALLET-A", "abc", "2027-01-01", null, null));
+        assertTrue(outputStream.toString().contains("[ERROR]"));
+    }
+
+    @Test
+    public void edittask_updateDateOnly_priorityAndDescUnchanged() throws ItemTaskerException, IOException {
+        runner.run(buildEditTask("PALLET-A", "1", "2027-03-15", null, null));
+        SKUTask task = sku.getSKUTaskList().getSKUTaskList().get(0);
+        assertEquals("2027-03-15", task.getSKUTaskDueDate());
+        assertEquals(Priority.HIGH, task.getSKUTaskPriority());
+        assertEquals("original desc", task.getSKUTaskDescription());
+    }
+
+    @Test
+    public void edittask_updatePriorityOnly_dateAndDescUnchanged() throws ItemTaskerException, IOException {
+        runner.run(buildEditTask("PALLET-A", "1", null, "LOW", null));
+        SKUTask task = sku.getSKUTaskList().getSKUTaskList().get(0);
+        assertEquals("2026-04-01", task.getSKUTaskDueDate());
+        assertEquals(Priority.LOW, task.getSKUTaskPriority());
+        assertEquals("original desc", task.getSKUTaskDescription());
+    }
+
+    @Test
+    public void edittask_editSecondOfThreeTasks_onlySecondChanges() throws ItemTaskerException, IOException {
+        sku.getSKUTaskList().addSKUTask("PALLET-A", Priority.MEDIUM, "2026-05-01", "second task");
+        sku.getSKUTaskList().addSKUTask("PALLET-A", Priority.LOW, "2026-06-01", "third task");
+        runner.run(buildEditTask("PALLET-A", "2", null, "HIGH", null));
+        assertEquals(Priority.HIGH, sku.getSKUTaskList().getSKUTaskList().get(1).getSKUTaskPriority());
+        assertEquals(Priority.HIGH, sku.getSKUTaskList().getSKUTaskList().get(0).getSKUTaskPriority());
+        assertEquals(Priority.LOW, sku.getSKUTaskList().getSKUTaskList().get(2).getSKUTaskPriority());
     }
 }
