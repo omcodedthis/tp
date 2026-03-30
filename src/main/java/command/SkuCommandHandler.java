@@ -8,6 +8,9 @@ import sku.SKU;
 import sku.SKUList;
 import ui.Ui;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  * Handles all SKU-level commands: adding, editing, and deleting SKUs.
  * Each public method corresponds to a single user command.
@@ -15,7 +18,7 @@ import ui.Ui;
 
 //@@author omcodedthis
 public class SkuCommandHandler {
-
+    private static final Logger LOGGER = Logger.getLogger(SkuCommandHandler.class.getName());
     private final SKUList skuList;
 
     public SkuCommandHandler(SKUList skuList) {
@@ -59,25 +62,36 @@ public class SkuCommandHandler {
      */
     //@@author AkshayPranav19
     public void handleEditSku(ParsedCommand cmd) throws SKUNotFoundException {
+        assert cmd != null : "Internal Error: ParsedCommand cannot be null";
+
         String skuId = cmd.getArg("n");
         String locationStr = cmd.getArg("l");
 
         if (skuId == null || locationStr == null) {
+            LOGGER.log(Level.WARNING, "editsku missing args: skuId={0}, loc={1}",
+                    new Object[]{skuId, locationStr});
             Ui.printError("Usage: editsku n/SKU_ID l/NEW_LOCATION");
             return;
         }
 
+        LOGGER.log(Level.INFO, "Attempting to edit SKU [{0}] to location [{1}]",
+                new Object[]{skuId, locationStr});
+
         SKU targetSku = CommandHelper.findSkuOrError(skuList, skuId);
         if (targetSku == null) {
+            LOGGER.log(Level.WARNING, "editsku failed: SKU [{0}] not found", skuId);
             return;
         }
 
         Location newLocation = CommandHelper.parseLocation(locationStr);
         if (newLocation == null) {
+            LOGGER.log(Level.WARNING, "editsku failed: invalid location [{0}]", locationStr);
             return;
         }
 
         targetSku.setLocation(newLocation);
+        LOGGER.log(Level.INFO, "SKU [{0}] successfully moved to {1}",
+                new Object[]{skuId, newLocation});
         Ui.printSuccess("Updated location of SKU [" + skuId.toUpperCase() + "] to " + newLocation + ".");
     }
 
