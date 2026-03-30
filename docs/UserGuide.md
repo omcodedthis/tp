@@ -67,5 +67,6 @@ Example of usage:
 | Export inventory | `export` | `export` |
 | Help | `help` | `help` |
 | Exit | `bye` / `exit` | `bye` |
+| View status | `status [n/SKU_ID]` | `status n/PALLET-A` |
 
 *Locations: A1 A2 A3 \| B1 B2 B3 \| C1 C2 C3 (3x3 warehouse grid). Priorities: HIGH, MEDIUM, LOW. Sort fields: date, priority, status.*
