@@ -162,6 +162,7 @@ The following class diagram shows the architecture connecting the `CommandRunner
     * *Pros:* Simpler logic to write, heavily reducing the number of pass-through methods in `SKUTaskList`.
     * *Cons:* Weakens data coupling boundaries. A caller command might hold onto a `SKUTask` and accidentally modify it asynchronously outside of the defined safe access points, compromising system stability.
 
+
 ### Edit SKU / Edit Task Feature
 
 #### Implementation Details
@@ -229,20 +230,20 @@ The following class diagram shows the architecture:
 **Aspect: In-place mutation vs. delete-and-recreate for Edit SKU:**
 
 * **Current Implementation:** Directly mutates the `SKU` object's location field via `setLocation()`.
-  * *Pros:* Simple, efficient, and preserves all existing tasks attached to the SKU. No risk of orphaned tasks.
-  * *Cons:* The SKU object is mutable, which could be a concern in concurrent environments.
+    * *Pros:* Simple, efficient, and preserves all existing tasks attached to the SKU. No risk of orphaned tasks.
+    * *Cons:* The SKU object is mutable, which could be a concern in concurrent environments.
 * **Alternative:** Delete the old SKU and recreate it at the new location, then re-attach tasks.
-  * *Pros:* Maintains immutability of SKU objects.
-  * *Cons:* Significantly more complex. Requires migrating all tasks to the new object, with high risk of data loss if the migration fails partway.
+    * *Pros:* Maintains immutability of SKU objects.
+    * *Cons:* Significantly more complex. Requires migrating all tasks to the new object, with high risk of data loss if the migration fails partway.
 
 **Aspect: Managing task modifications via `SKUTaskList` wrappers versus returning internal objects:**
 
 * **Current Implementation:** `SKUTaskList#editSKUTask()` handles modification duties in place, applying only non-null fields to the target `SKUTask`.
-  * *Pros:* Strong encapsulation. `SKUTaskList` dictates precisely how a task is safely modified, without leaking mutable object references back to caller-components.
-  * *Cons:* Requires additional boilerplate wrapper methods inside `SKUTaskList` just to pass down simple updates to the internal tasks.
+    * *Pros:* Strong encapsulation. `SKUTaskList` dictates precisely how a task is safely modified, without leaking mutable object references back to caller-components.
+    * *Cons:* Requires additional boilerplate wrapper methods inside `SKUTaskList` just to pass down simple updates to the internal tasks.
 * **Alternative:** Expose `getTask(index)` method from `SKUTaskList`, letting callers modify the returned `SKUTask` object directly.
-  * *Pros:* Simpler logic to write, reducing the number of pass-through methods.
-  * *Cons:* Weakens data coupling boundaries. A caller might hold onto a `SKUTask` and accidentally modify it outside of the defined safe access points.
+    * *Pros:* Simpler logic to write, reducing the number of pass-through methods.
+    * *Cons:* Weakens data coupling boundaries. A caller might hold onto a `SKUTask` and accidentally modify it outside of the defined safe access points.
 
 ### View SKU Task Feature
 
