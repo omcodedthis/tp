@@ -17,13 +17,13 @@ import java.util.logging.Logger;
  */
 
 //@@author omcodedthis
-public class SkuCommandHandler {
-    private static final Logger LOGGER = Logger.getLogger(SkuCommandHandler.class.getName());
+public class SKUCommandHandler {
+    private static final Logger LOGGER = Logger.getLogger(SKUCommandHandler.class.getName());
     private final SKUList skuList;
 
-    public SkuCommandHandler(SKUList skuList) {
+    public SKUCommandHandler(SKUList skuList) {
         if (skuList == null) {
-            throw new IllegalArgumentException("SkuCommandHandler requires a non-null SKUList");
+            throw new IllegalArgumentException("SKUCommandHandler requires a non-null SKUList");
         }
         this.skuList = skuList;
     }
