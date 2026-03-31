@@ -299,9 +299,6 @@ Example of usage:
 **Q**: What happens if I manually edit the `storage.json` file and make a mistake?  
 **A**: If the JSON format becomes invalid, outdated, or corrupted due to manual edits, ItemTasker will print a warning on startup and begin with an empty warehouse to prevent system crashes. It is highly recommended to make a copy of your `storage.json` file before doing any manual tweaking.
 
-**Q**: Can I edit multiple fields of a task at once?  
-**A**: Yes. The `edittask` command accepts any combination of `d/` (due date), `p/` (priority), and `t/` (description) flags simultaneously. Only the fields you specify will be updated. All other fields are preserved.
-
 **Q**: What is the difference between `viewmap` and `status`?  
 **A**: `viewmap` is a visual tool that shows the physical distribution of tasks across the A1-C3 grid. `status` is an analytical tool that provides a breakdown of task completion percentages and identifies which SKUs require immediate attention.
 
