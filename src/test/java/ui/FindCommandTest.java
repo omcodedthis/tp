@@ -25,6 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+//@@author heehaw1234
+
 public class FindCommandTest {
 
     private CommandRunner runner;
@@ -153,5 +155,82 @@ public class FindCommandTest {
         assertThrows(InvalidIndexException.class, () -> {
             runner.run(buildFindCommand("WIDGET-A1", null, "99"));
         });
+    }
+
+    @Test
+    public void find_invalidIndexFormat_throwsInvalidIndexException() {
+        assertThrows(InvalidIndexException.class, () -> {
+            runner.run(buildFindCommand("WIDGET-A1", null, "abc"));
+        });
+    }
+
+    @Test
+    public void find_zeroOrNegativeIndex_throwsInvalidIndexException() {
+        assertThrows(InvalidIndexException.class, () -> {
+            runner.run(buildFindCommand("WIDGET-A1", null, "0"));
+        });
+        assertThrows(InvalidIndexException.class, () -> {
+            runner.run(buildFindCommand("WIDGET-A1", null, "-5"));
+        });
+    }
+
+    @Test
+    public void find_byIndexOnly_showsTaskAtIndexAcrossAllSKUs() throws ItemTaskerException, IOException {
+        runner.run(buildFindCommand(null, null, "1"));
+        String output = getOutput();
+        assertTrue(output.contains("restock shelf"));
+        assertTrue(output.contains("restock back"));
+    }
+
+    @Test
+    public void find_byIndexOnly_skipsSKUsSmallerThanIndex() throws ItemTaskerException, IOException {
+        // WIDGET-A1 has 2 tasks, GADGET-B2 has 1 task.
+        // Searching for index 2 should only find WIDGET-A1's 2nd task ("check inventory")
+        // and safely skip GADGET-B2 without throwing an InvalidIndexException.
+        runner.run(buildFindCommand(null, null, "2"));
+        String output = getOutput();
+        assertTrue(output.contains("check inventory"));
+        assertFalse(output.contains("restock back"));
+        assertFalse(output.contains("GADGET-B2"));
+    }
+
+    @Test
+    public void find_byDescAndIndex_narrowsResults() throws ItemTaskerException, IOException {
+        runner.run(buildFindCommand(null, "restock", "1"));
+        String output = getOutput();
+        assertTrue(output.contains("restock shelf"));
+        assertTrue(output.contains("restock back"));
+        assertFalse(output.contains("check inventory"));
+    }
+
+    @Test
+    public void find_partiallyMatchesDescription_narrowsResults() throws ItemTaskerException, IOException {
+        runner.run(buildFindCommand(null, "resto", null));
+        String output = getOutput();
+        assertTrue(output.contains("restock shelf"));
+        assertTrue(output.contains("restock back"));
+        assertFalse(output.contains("check inventory"));
+    }
+
+    @Test
+    public void find_emptySkuList_returnsNothing() throws ItemTaskerException, IOException {
+        // It's cleaner to remove SKUs from our own SKUList 
+        skuList.deleteSKU("WIDGET-A1");
+        skuList.deleteSKU("GADGET-B2");
+
+        runner.run(buildFindCommand(null, "resto", null));
+        String output = getOutput();
+        assertFalse(output.contains("restock shelf"));
+        assertTrue(output.contains("No matching tasks found."));
+    }
+
+    @Test
+    public void find_indexBeyondSize_returnsNothing() throws ItemTaskerException, IOException {
+        // "WIDGET-A1" has 2 tasks. Index 3 is size + 1. 
+        // "GADGET-B2" has 1 task. 
+        // Searching for 3 shouldn't throw error but return nothing.
+        runner.run(buildFindCommand(null, null, "3"));
+        String output = getOutput();
+        assertTrue(output.contains("No matching tasks found."));
     }
 }

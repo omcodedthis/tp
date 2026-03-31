@@ -2,61 +2,192 @@
 
 ## Acknowledgements
 
-{list here sources of all reused/adapted ideas, code, documentation, and third-party libraries -- include links to the original source as well}
+This project used the [SE-EDU initiative's](https://se-education.org) AddressBook-Level3 (AB3) as guidance. We have customized its foundational architecture, parser logic, and command execution flow for our specific use case.
+
+We also acknowledge the following for their contributions to our development process:
+- [PlantUML](https://plantuml.com) for UML diagram generation.
+- The NUS CS2113 teaching team for their instructional guidance and code templates.
 
 ## Design
+
+### Architecture
+
+ItemTasker follows a layered architecture with clear separation of concerns:
+
+![Architecture Diagram](plantUML/architecture.png)
+
+**Component Relationships:**
+
+The diagram shows the main components and their relationships:
+
+- **Ui** handles all user interface interactions
+- **Parser** transforms raw input into structured `ParsedCommand` objects
+- **CommandRunner** dispatches commands to the appropriate handler
+- **SKUCommandHandler** manages SKU-level commands (`addsku`, `editsku`, `deletesku`)
+- **TaskCommandHandler** manages task-level commands (`addskutask`, `edittask`, `deletetask`, `marktask`, `unmarktask`, `sorttasks`)
+- **ViewCommandHandler** manages read-only commands (`listtasks`, `find`, `status`)
+- **CommandHelper** and **DateValidator** provide shared validation utilities
+- **TaskSorter** sorts tasks by date, priority, or completion status
+- **SKUList** contains multiple **SKU** instances (1-to-many relationship)
+- **SKU** contains one **SKUTaskList** which holds multiple **SKUTask** instances (1-to-many relationship)
+- **Storage** handles JSON persistence of the warehouse state
+- **Export** writes a human-readable inventory snapshot to a text file
+
+*Note: Solid arrows (→) indicate direct dependencies or composition.
+Dashed arrows (- ->) indicate utility dependencies (e.g. static helper calls).
+The "*" multiplicity on model relationships denotes one-to-many.*
+
+**Key Design Principles:**
+
+- **Single Responsibility**: Each handler class owns exactly one category of commands
+- **Command Delegation**: `CommandRunner` acts purely as a dispatcher with no business logic
+- **Encapsulation**: Each `SKU` owns its own `SKUTaskList` — no external maps or redundant data structures
+- **Layered Architecture**: UI → Logic → Model → Storage separation
+
+### Command component - Samuel
+### Exception component - Samuel
+### SKU component - om
+
+### SKUTask component
+
+**API** : `SKUTaskList.java`, `SKUTask.java`
+
+Here's a class diagram of the SKUTask component:
+
+![SKUTask Architecture Diagram](plantUML/skutask-operations/skutask-architecture.png)
+
+The sequence diagram below illustrates the interactions within the SKUTask component, taking the `addSKUTask` API call as an example.
+
+**Interactions Inside the SKUTask Component for the `addskutask` Command**
+
+![Add SKU Task Sequence Diagram](plantUML/skutask-operations/addTaskSequence.png)
+
+How the SKUTask component works:
+
+When the `SKUTaskList` is called upon to execute a task-level operation, it receives the extracted task properties (e.g., date, priority, description) from the parent `SKU` that delegates it.
+This results in a `SKUTask` object being instantiated (or an existing one being modified or deleted) which is managed entirely within the `SKUTaskList`.
+The `SKUTaskList` communicates internally with the individual `SKUTask` items, enforcing controlled access through wrapper methods.
+Note that although this is shown as a single step in the diagram above (for simplicity), in the code it can take several interactions (between the list and the individual task fields) to update specific parameters like the `Priority` enum or completion status.
+The result of the task execution permanently mutates the system's memory model, which is ultimately fetched back by higher-level components for confirmation.
+
+Here are the other interactions in the SKUTask component (omitted from the sequence diagram above) that are used for property reading and modifications:
+
+**Property Modifications (Setters)**
+
+![Setters Sequence Diagram](plantUML/skutask-operations/settersSequence.png)
+
+**Property Retrieval (Getters)**
+
+![Getters Sequence Diagram](plantUML/skutask-operations/gettersSequence.png)
+
+**Task Deletion**
+
+![Delete SKU Task Sequence Diagram](plantUML/skutask-operations/deleteTaskSequence.png)
+
+How task properties and deletions work:
+
+When called upon to modify a task, the `TaskCommandHandler` class relies on a shared `CommandHelper` utility to safely locate the specific `SKUTask` object instance inside the model environment without needing to hold a map.
+Depending on the command, it uses the specific parameter wrappers on the `SKUTaskList` object, which apply the mutation or extraction down to the base `SKUTask` class level and return the newly shaped data to the user.
+
+### Storage component - Om
+### UI component
+
+**API** : `Ui.java`, `Parser.java`, `ItemTasker.java`, `ItemTaskerLogger.java`, `ViewMap.java`
+
+The UI component handles the lifecycle of user interaction, from capturing raw terminal input to displaying formatted warehouse data.
+
+#### Architecture
+
+The class diagram below illustrates the structure of the UI component and its relationship with the Logic and Model components:
+
+![UI Architecture Diagram](plantUML/ui/UiComponentArchitecture.png)
+
+The UI consists of a core entry point, **ItemTasker**, which orchestrates the interaction between several specialized classes:
+* **Ui**: Manages the `Scanner` for input and provides `static` methods for centralized terminal printing (e.g., success/error messages, headers).
+* **Parser**: Responsible for decomposing raw strings into structured `ParsedCommand` objects using flag-based regex logic.
+* **ViewMap**: A specialized display class that renders a 3x3 grid visualization of warehouse task distribution.
+* **ItemTaskerLogger**: Manages internal system logging, redirecting debug output to `itemtasker.log` to keep the CLI interface clean.
+
+How the UI component works:
+* It **executes user commands** by passing `ParsedCommand` objects to the **Logic** component (`CommandRunner`).
+* It **reads user input** via a blocking `while` loop in the `ItemTasker` main method.
+* It **depends on Model classes** (e.g., `SKUList`, `SKUTask`) to extract and display data in formatted lists, maps, and status summaries.
+
+#### Interactions
+
+The sequence diagram below illustrates the standard interaction loop within the UI component when a user enters a command.
+
+**Interactions within the UI Component for a Command Lifecycle**
+
+![UI Interaction Sequence Diagram](plantUML/ui/UiComponentSequence.png)
+
+How the UI interaction loop works:
+1.  **ItemTasker** calls `Ui#readInput()`, which prompts the user with `> ` and waits for a string.
+2.  The raw string is passed to **Parser#parse()**, which identifies the command word and maps flags (e.g., `n/`, `d/`) to values.
+3.  **ItemTasker** passes the resulting `ParsedCommand` to the **Logic** component (`CommandRunner`).
+4.  If the logic execution fails, **ItemTasker** catches the exception and uses `Ui#printError()` to provide feedback.
+5.  On successful execution, the **Logic** component calls back to **Ui** static methods to display the specific results.
+
+#### Specialized Visualizations
+
+Beyond standard text feedback, the UI component provides complex data rendering:
+
+**Warehouse Map Rendering (`viewmap`)**
+When `viewmap` is called, the **ViewMap** class iterates through the `SKUList`, maps task counts to a coordinate grid (A1-C3), and renders a 3x3 visual representation of the warehouse floor.
+
+**Status Analysis Display**
+The **Ui** component works with the Model's analysis tools to display completion percentages and pending task counts through `printSkuStatus` and `printWarehouseStatus`.
 
 ## Implementation
 
 ### Add / Delete SKU Feature
 
 #### Implementation Details
-
-The Add and Delete SKU mechanism is facilitated by the `CommandRunner` component, which manages the application's core state through a single primary data structure: the `SKUList`. Following strict Object-Oriented encapsulation, there are no external maps; each `SKU` inherently manages its own `SKUTaskList`.
+The Add and Delete SKU mechanism is facilitated by the `SKUCommandHandler` component, which is dispatched by the `CommandRunner`. It manages the application's core state through a single primary data structure: the `SKUList`. Following object-oriented encapsulation principles, there are no external maps; each `SKU` manages its own `SKUTaskList`.
 
 The operations are exposed and handled internally via the following methods:
 
-* `CommandRunner#handleAddSku(ParsedCommand)` — Validates constraints and delegates to `SKUList` to instantiate a new `SKU` (which automatically initializes its own internal task list).
-* `CommandRunner#handleDeleteSku(ParsedCommand)` — Removes the `SKU` from the inventory, which inherently purges all tasks associated with it.
+* `SKUCommandHandler#handleAddSku(ParsedCommand)` — Validates arguments (ensuring they are not null or empty), checks for duplicates, and delegates to `SKUList` to instantiate a new `SKU` (which automatically initializes its own internal task list).
+* `SKUCommandHandler#handleDeleteSku(ParsedCommand)` — Validates the input, ensures the target SKU exists, and removes the `SKU` from the inventory, which deletes purges all tasks associated with it.
 
 Given below is an example usage scenario demonstrating how the Add SKU mechanism behaves at each step.
 
 **Step 1.** The user executes `addsku n/PALLET-A l/A1`. The `Ui` reads the input, and the `Parser` extracts the command word and maps the arguments `n/` to `PALLET-A` and `l/` to `A1` into a `ParsedCommand` object.
 
-**Step 2.** The `CommandRunner#run()` method receives this `ParsedCommand`. Recognizing the `addsku` command word, it routes execution to `CommandRunner#handleAddSku()`.
+**Step 2.** The `CommandRunner#run()` method receives this `ParsedCommand`. Recognizing the `addsku` command word, it routes execution to the dedicated `SKUCommandHandler#handleAddSku()`.
 
-**Step 3.** `handleAddSku()` parses the location string into a `Location` enum. It then calls `findSku("PALLET-A")` to iterate through the `SKUList`. Finding no duplicates, it proceeds with the insertion.
+**Step 3.** `handleAddSku()` performs validations, checking for missing or empty arguments. It calls `CommandHelper.parseLocation("A1")` to resolve the `Location` enum. It then calls `skuList.findByID("PALLET-A")` to iterate through the `SKUList`. If no duplicates are found, it proceeds with the insertion.
 
-![System Memory State Steps 1 to 3](plantUML/add-delete-sku/add-sku-step1-3.png)
+![Steps 1 to 3](plantUML/add-delete-sku/add-sku-step1-3.png)
 
-**Step 4.** The `SKUList#addSKU()` method is invoked. This method calls the `SKU` constructor, instantiating a new `SKU` object. During instantiation, the `SKU` automatically generates an empty `SKUTaskList` for itself. The `SKU` is then appended to the internal `ArrayList`.
+**Step 4.** The `SKUList#addSKU()` method is invoked. This method acts as a secondary defensive barrier, checking inputs before calling the `SKU` constructor. During instantiation, the `SKU` normalizes its ID (trimming whitespace and forcing uppercase) and automatically generates an empty `SKUTaskList` for itself. The `SKU` is then appended to the internal `ArrayList`.
 
-![System Memory State Step 4](plantUML/add-delete-sku/add-sku-step4.png)
+![Step 4](plantUML/add-delete-sku/add-sku-step4.png)
 
 **Step 5.** Back in `handleAddSku()`, execution completes successfully. Control returns to the `Ui` to print the success message. The system's memory state now contains the new `SKU`, fully equipped to accept tasks without requiring any external mapping.
 
-![System Memory State Step 5](plantUML/add-delete-sku/add-sku-step5.png)
+![Step 5](plantUML/add-delete-sku/add-sku-step5.png)
 
-*Note: The `deletesku` command operates by simply calling `SKUList#deleteSKU()` to remove the object from the array. Due to encapsulation, dropping the `SKU` object automatically garbage-collects its associated `SKUTaskList`, preventing memory leaks.*
+*Note: The `deletesku` command operates by routing to `SKUCommandHandler#handleDeleteSku()`, which validates the input and throws a `SKUNotFoundException` if the target does not exist. It then calls `SKUList#deleteSKU()` to perform a case-insensitive removal from the array. Due to encapsulation, dropping the `SKU` object automatically garbage-collects its associated `SKUTaskList`, preventing memory leaks.*
 
 The following sequence diagram shows the flow of adding a SKU:
 
-![Add SKU Sequence Diagram](plantUML/add-delete-sku/add-sku-sequence.png)
+![Step 5](plantUML/add-delete-sku/add-sku-sequence.png)
 
 The following class diagram shows the architecture:
 
-![Add SKU Class Diagram](plantUML/add-delete-sku/add-sku-architecture.png)
+![Step 5](plantUML/add-delete-sku/add-sku-architecture.png)
 
 #### Design Considerations
 
 **Aspect: How SKU tasks are stored and mapped to their parent SKU:**
 
 * **Current Implementation:** Require all task operations to access the `SKUTaskList` directly through the `SKU` object residing in the `SKUList`.
-    * *Pros:* High cohesion and strict encapsulation. A SKU is solely responsible for its own tasks. Memory overhead is reduced, and state mutations are safer as there is no need to synchronize deletions across multiple data structures.
-    * *Cons:* Slightly slower lookup times, as finding a task requires iterating through the `SKUList` to locate the parent SKU first (O(n) complexity).
-* **Alternative:** Maintain a `HashMap<String, SKUTaskList>` inside the `CommandRunner` to map SKU IDs to their tasks.
-    * *Pros:* Fast, O(1) time complexity when looking up tasks for a specific SKU during filtering or task addition.
-    * *Cons:* Severe data duplication and poor encapsulation. This requires the `CommandRunner` to juggle references and manually synchronize deletions across two separate data structures, leading to an architecture prone to orphaned tasks if not correctly synced.
+  * *Pros:* High cohesion and strict encapsulation. A SKU is solely responsible for its own tasks. Memory overhead is reduced, and state mutations are safer as there is no need to synchronize deletions across multiple data structures.
+  * *Cons:* Slightly slower lookup times, as finding a task requires iterating through the `SKUList` to locate the parent SKU first (O(n) complexity).
+* **Alternative:** Maintain a `HashMap<String, SKUTaskList>` inside the command handlers or `CommandRunner` to map SKU IDs to their tasks.
+  * *Pros:* Fast, O(1) time complexity when looking up tasks for a specific SKU during filtering or task addition.
+  * *Cons:* Severe data duplication and poor encapsulation. This requires the handlers to juggle references and manually synchronize deletions across two separate data structures, leading to an architecture prone to orphaned tasks if not correctly synced.
 
 ### Add / Delete SKU Task Feature
 
@@ -66,22 +197,22 @@ The Add and Delete SKU Task operations are facilitated by the `CommandRunner` co
 
 The operations are handled internally via the following flow:
 
-* `CommandRunner#handleAddSkuTask(ParsedCommand)` — Extracts the targeted SKU ID and the task properties (including `Priority`). It calls `CommandRunner#findSku()` to validate the SKU's existence and delegates to `SKUTaskList#addSKUTask()` to instantiate a new `SKUTask`.
-* `CommandRunner#handleDeleteTask(ParsedCommand)` — Calls `CommandRunner#findSku()` to locate the SKU, validates the target task index, and instructs `SKUTaskList#deleteSKUTaskByIndex()` to remove the task from the internal array.
+* `TaskCommandHandler#handleAddSkuTask(ParsedCommand)` — Extracts the targeted SKU ID and the task properties (including `Priority`). It looks up the SKU via `SKUList#findByID()` and delegates to `SKUTaskList#addSKUTask()` to instantiate a new `SKUTask`.
+* `TaskCommandHandler#handleDeleteTask(ParsedCommand)` — Calls `CommandHelper#findSkuOrError()` to locate the SKU safely, validates the target task index, and instructs `SKUTaskList#deleteSKUTaskByIndex()` to remove the task from the internal array.
 
 Given below is an example usage scenario demonstrating how the Add SKU Task mechanism behaves step-by-step.
 
 **Step 1.** The user executes `addskutask n/P-A d/2026-10-10 p/HIGH`. The `Ui` reads the input, and the `Parser` extracts the command word and maps the arguments `n/` to `P-A`, `d/` to `2026-10-10`, and `p/` to `HIGH` into a `ParsedCommand` object.
 
-**Step 2.** The `CommandRunner#run()` method receives this `ParsedCommand`. Recognizing the `addskutask` command word, it routes execution to `CommandRunner#handleAddSkuTask()`.
+**Step 2.** The `CommandRunner#run()` method receives this `ParsedCommand`. Recognizing the `addskutask` command word, it routes execution to `TaskCommandHandler#handleAddSkuTask()`.
 
-**Step 3.** `handleAddSkuTask()` processes the properties (parsing `HIGH` into the `Priority` enum). It calls `findSku("P-A")` to locate the target `SKU`. Upon finding it, it retrieves the SKU's internal `SKUTaskList`.
+**Step 3.** `handleAddSkuTask()` processes the properties (parsing `HIGH` into the `Priority` enum). It calls `skuList.findByID("P-A")` to locate the target `SKU`. Upon finding it, it retrieves the SKU's internal `SKUTaskList`.
 
 **Step 4.** The `SKUTaskList#addSKUTask()` method is invoked. This method instantiates a new `SKUTask` object with the extracted properties (including the `Priority` enum state). The task is appended to the internal `ArrayList`.
 
 **Step 5.** Execution completes successfully, and control returns to the `Ui` to print the success message.
 
-*Note: The delete operation follows a nearly identical traversal, except `CommandRunner#handleDeleteTask()` parses the target index instead of properties, and delegates to `SKUTaskList#deleteSKUTaskByIndex()`.*
+*Note: The delete operation follows a nearly identical traversal, except `TaskCommandHandler#handleDeleteTask()` parses the target index instead of properties, and delegates to `SKUTaskList#deleteSKUTaskByIndex()`.*
 
 The following sequence diagram shows the end-to-end flow of adding a SKU Task:
 
@@ -95,7 +226,7 @@ The following sequence diagram shows the end-to-end flow of deleting a SKU Task:
 
 #### Implementation Details
 
-Updating or retrieving a task's state passes entirely through `CommandRunner`, down to `SKUTaskList`, and finally to individual `SKUTask` objects. When a user executes `edittask n/P-A i/1 p/LOW`, `CommandRunner#handleEditTask()` locates the SKU and invokes `SKUTaskList#editSKUTask()`. `SKUTaskList` identifies the proper `SKUTask` at the index and modifies its state exclusively, reinforcing the abstraction.
+Updating or retrieving a task's state passes entirely from a specific command handler down to `SKUTaskList`, and finally to individual `SKUTask` objects. When a user executes `edittask n/P-A i/1 p/LOW`, the flow routes to `TaskCommandHandler#handleEditTask()`, which locates the SKU and invokes `SKUTaskList#editSKUTask()`. `SKUTaskList` identifies the proper `SKUTask` at the index and modifies its state exclusively, reinforcing the abstraction.
 
 The following sequence diagram shows the holistic flow of setting properties (e.g., due date, priority, and description via `t/DESC`):
 
@@ -120,127 +251,198 @@ The following class diagram shows the architecture connecting the `CommandRunner
     * *Pros:* Simpler logic to write, heavily reducing the number of pass-through methods in `SKUTaskList`.
     * *Cons:* Weakens data coupling boundaries. A caller command might hold onto a `SKUTask` and accidentally modify it asynchronously outside of the defined safe access points, compromising system stability.
 
-### Mark / Unmark SKU Task Feature
+
+### Edit SKU / Edit Task Feature
 
 #### Implementation Details
 
-The Mark and Unmark operations allow users to toggle the completion state of a `SKUTask`. Both operations are facilitated by the `CommandRunner` component, which routes execution through the SKU's `SKUTaskList` down to the individual `SKUTask`.
+The Edit SKU and Edit Task operations allow users to modify existing data in the warehouse. Edit SKU updates a SKU's warehouse location, while Edit Task updates a task's due date, priority, and/or description. Both operations are facilitated by the `CommandRunner` component, which routes execution to the appropriate handler and down to the target object.
 
 The operations are handled internally via the following methods:
 
-* `CommandRunner#handleMarkTask(ParsedCommand)` — Locates the target SKU and task, validates that the task is not already marked, and delegates to `SKUTaskList#markTask()`.
-* `CommandRunner#handleUnmarkTask(ParsedCommand)` — Locates the target SKU and task, validates that the task is not already unmarked, and delegates to `SKUTaskList#unmarkTask()`.
+* `SKUCommandHandler#handleEditSku(ParsedCommand)` — Locates the target SKU, validates the new location, and delegates to `SKU#setLocation()`.
+* `TaskCommandHandler#handleEditTask(ParsedCommand)` — Locates the target SKU and task, validates all provided fields (date, priority, description), and delegates to `SKUTaskList#editSKUTask()`.
 
-Given below is an example usage scenario for the Mark SKU Task mechanism.
+#### Edit SKU
 
-**Step 1.** The user executes `marktask n/P-A i/1`. The `Ui` reads the input, and the `Parser` maps the arguments into a `ParsedCommand` object.
+Given below is an example usage scenario for the Edit SKU mechanism.
 
-**Step 2.** The `CommandRunner#run()` method routes execution to `CommandRunner#handleMarkTask()`.
+**Step 1.** The user executes `editsku n/PALLET-A l/C3`. The `Ui` reads the input, and the `Parser` maps the arguments into a `ParsedCommand` object.
 
-**Step 3.** `handleMarkTask()` calls `findSku("P-A")` to locate the target `SKU`. It then retrieves the `SKUTaskList` and the internal `ArrayList<SKUTask>` to validate the index.
+**Step 2.** The `CommandRunner#run()` method routes execution to `SKUCommandHandler#handleEditSku()`.
 
-**Step 4.** The task's `isDone()` state is checked. If already marked, an info message is returned. Otherwise, `SKUTaskList#markTask(1)` is called, which delegates to `SKUTask#mark()` to set `isDone = true`.
+**Step 3.** `handleEditSku()` calls `CommandHelper.findSkuOrError()` to locate the target `SKU` via case-insensitive lookup. If not found, an error is printed and the method returns early.
 
-**Step 5.** Execution completes and a success message is displayed.
+**Step 4.** The handler calls `CommandHelper.parseLocation("C3")` to validate and convert the string into a `Location` enum. If the location is invalid (e.g. `Z9`), an error is printed and the method returns.
 
-*Note: `unmarktask` follows the same traversal in reverse — it validates the task is currently marked before calling `SKUTaskList#unmarkTask()`, which delegates to `SKUTask#unmark()`.*
+**Step 5.** `SKU#setLocation(Location.C3)` is called, updating the SKU's location in place. All existing tasks attached to the SKU are preserved. A success message is displayed.
 
-The following sequence diagram shows the flow of marking a task:
+The following sequence diagram shows the flow of editing a SKU:
 
-![Mark Task Sequence Diagram](plantUML/mark-unmark-task/markTaskSequence.png)
-
-The following sequence diagram shows the flow of unmarking a task:
-
-![Unmark Task Sequence Diagram](plantUML/mark-unmark-task/unmarkTaskSequence.png)
+![Edit SKU Sequence Diagram](plantUML/edit-sku/edit-sku-sequence.png)
 
 The following class diagram shows the architecture:
 
-![Mark/Unmark Architecture Class Diagram](plantUML/mark-unmark-task/mark-unmark-architecture.png)
+![Edit SKU Architecture Class Diagram](plantUML/edit-sku/edit-sku-architecture.png)
+
+#### Edit Task
+
+Given below is an example usage scenario for the Edit Task mechanism.
+
+**Step 1.** The user executes `edittask n/PALLET-A i/1 d/2026-12-31 p/LOW t/updated`. The `Ui` reads the input, and the `Parser` maps the arguments into a `ParsedCommand` object.
+
+**Step 2.** The `CommandRunner#run()` method routes execution to `TaskCommandHandler#handleEditTask()`.
+
+**Step 3.** `handleEditTask()` performs a multi-stage validation chain:
+1. Checks required arguments (`n/` SKU ID, `i/` task index) are present
+2. Checks at least one editable field (`d/`, `p/`, `t/`) is provided
+3. Validates date format via `DateValidator.validateDateOrError()`
+4. Parses and validates index via `CommandHelper.parseIndex()`
+5. Locates SKU via `CommandHelper.findSkuOrError()`
+6. Bounds-checks the index against the task list size
+7. Parses and validates priority via `CommandHelper.parsePriority()`
+
+**Step 4.** Only after all validations pass, the handler calls `SKUTaskList#editSKUTask()`. This method applies only the non-null fields — unchanged fields are preserved. Internally, it delegates to `SKUTask#setSKUTaskDueDate()`, `SKUTask#setSKUTaskPriority()`, and `SKUTask#setSKUTaskDescription()` as needed.
+
+**Step 5.** Execution completes and a success message is displayed showing the updated task state.
+
+The following sequence diagram shows the flow of editing a task:
+
+![Edit Task Sequence Diagram](plantUML/edit-task/edit-task-sequence.png)
+
+The following class diagram shows the architecture:
+
+![Edit Task Architecture Class Diagram](plantUML/edit-task/edit-task-architecture.png)
 
 #### Design Considerations
 
-**Aspect: Pre-condition check before toggling state:**
+**Aspect: In-place mutation vs. delete-and-recreate for Edit SKU:**
 
-* **Current Implementation:** `handleMarkTask()` and `handleUnmarkTask()` check `isDone()` on the task before delegating, rejecting redundant operations with an info message.
-    * *Pros:* Prevents silent no-ops that could confuse users (e.g., marking an already-done task with no feedback).
-    * *Cons:* Requires an extra read call to `isDone()` before the write, slightly increasing coupling between `CommandRunner` and `SKUTask` state.
-* **Alternative:** Delegate the guard check into `SKUTaskList` or `SKUTask` itself, throwing an exception on invalid toggle.
-    * *Pros:* Encapsulates the guard closer to the data.
-    * *Cons:* Requires exception propagation for a non-exceptional condition, which adds overhead and complicates the call chain.
+* **Current Implementation:** Directly mutates the `SKU` object's location field via `setLocation()`.
+    * *Pros:* Simple, efficient, and preserves all existing tasks attached to the SKU. No risk of orphaned tasks.
+    * *Cons:* The SKU object is mutable, which could be a concern in concurrent environments.
+* **Alternative:** Delete the old SKU and recreate it at the new location, then re-attach tasks.
+    * *Pros:* Maintains immutability of SKU objects.
+    * *Cons:* Significantly more complex. Requires migrating all tasks to the new object, with high risk of data loss if the migration fails partway.
+
+**Aspect: Managing task modifications via `SKUTaskList` wrappers versus returning internal objects:**
+
+* **Current Implementation:** `SKUTaskList#editSKUTask()` handles modification duties in place, applying only non-null fields to the target `SKUTask`.
+    * *Pros:* Strong encapsulation. `SKUTaskList` dictates precisely how a task is safely modified, without leaking mutable object references back to caller-components.
+    * *Cons:* Requires additional boilerplate wrapper methods inside `SKUTaskList` just to pass down simple updates to the internal tasks.
+* **Alternative:** Expose `getTask(index)` method from `SKUTaskList`, letting callers modify the returned `SKUTask` object directly.
+    * *Pros:* Simpler logic to write, reducing the number of pass-through methods.
+    * *Cons:* Weakens data coupling boundaries. A caller might hold onto a `SKUTask` and accidentally modify it outside of the defined safe access points.
 
 ### View SKU Task Feature
 
 #### Implementation Details
 
-The View SKU Task mechanism allows users to retrieve filtered or sorted views of the warehouse tasks without modifying the underlying data. This is facilitated by the `ViewSKUTask` logic processor, which decouples the filtering and sorting algorithms from the core `CommandRunner` and `Model` components.
+The View SKU Task mechanism allows users to retrieve filtered or sorted views of the warehouse tasks without modifying the underlying data. This is facilitated by the **ViewSKUTask** logic processor, which decouples the filtering and sorting algorithms from the core **CommandRunner** and **Model** components.
 
 The feature supports three primary modes:
 1.  **SKU Filtering (`n/`):** Isolates tasks belonging to a specific SKU ID.
-2.  **Priority Filtering (`p/`):** Streams all tasks and filters by the `Priority` enum (HIGH, MEDIUM, LOW).
-3.  **Spatial Sorting (`l/`):** Sorts all system tasks based on the distance from a specified warehouse `Location`.
+2.  **Priority Filtering (`p/`):** Streams all tasks and filters by the **Priority** enum (**HIGH**, **MEDIUM**, **LOW**).
+3.  **Spatial Sorting (`l/`):** Sorts all system tasks based on the distance from a specified warehouse **Location**.
 
 The operations are handled internally via the following flow:
 
-* **command Routing:** `CommandRunner#handleListTasks(ParsedCommand)` extracts the arguments, instantiates a `ViewSKUTask` object, and sets the respective filter strings.
-* **Data Aggregation:** `ViewSKUTask#listTasks(SKUList)` performs a full traversal of the `SKUList` to gather all available `SKUTask` objects into a "flattened" master list.
+* **Command Parsing:** **ItemTasker** reads the raw input via **Ui** and passes it to the **Parser**, which returns a **ParsedCommand**.
+* **Command Routing:** **ItemTasker** passes this command to **CommandRunner**, which delegates the request to **ViewCommandHandler#handleListTasks(cmd)**.
+* **Logic Instantiation:** The handler instantiates a short-lived **ViewSKUTask** object and sets the respective filter strings.
+* **Data Aggregation (The Gathering Loop):** Before filtering, **ViewSKUTask#listTasks(skuList)** must perform a full traversal of the **SKUList**. It visits every **parentSku** to collect all **SKUTask** objects into a "flattened" master list.
 * **Filtering & Sorting Logic:**
-  * For **SKU ID** and **Priority**, the viewer applies a Java Stream filter directly on the task list. Since these properties are encapsulated within the `SKUTask` object itself, no further interaction with the Model is required.
-  * For **Distance**, the viewer uses `calculateDistance()` within a comparator. This method performs a **parent-lookup** for each task to retrieve the physical coordinates from its associated `parentSku`.
+  * For **SKU ID** and **Priority**, the viewer applies a Java Stream filter directly on the aggregated task list. Since these properties are encapsulated within the **SKUTask** object, no further model interaction is required after the initial gather.
+  * For **Distance**, the viewer uses `calculateDistance()` within a comparator. This method performs a secondary **parent-lookup** for each task to retrieve physical coordinates from its associated **SKU**.
 
 The Distance formula used for spatial sorting is:
 $$\text{Distance} = |x_1 - x_2| + |y_1 - y_2|$$
 
+---
+
 #### Usage Scenarios and Sequence Diagrams
 
-**Scenario 1: Spatial Sorting (`listtasks l/B2`)** This scenario demonstrates the parent-lookup loop required to resolve coordinates. The viewer iterates through each `SKU` to collect tasks and then references the `parentSku` location during the sort.
+**Scenario 1: Spatial Sorting (`listtasks l/B2`)**
+This scenario demonstrates the dual-loop process. The first loop gathers tasks from the hierarchy. The second loop occurs in the **ViewCommandHandler**, which calls `calculateDistance` for each result to format the distance values for the UI display.
 
 ![View SKU Task (Distance) Sequence Diagram](plantUML/viewSKUTask-operations/viewSKUTask-distanceSequence.png)
 
-**Scenario 2: Priority Filtering (`listtasks p/HIGH`)** This illustrates a simplified flow. Because `Priority` is stored internally within the `SKUTask`, the viewer gathers the tasks once and filters them internally without further Model interaction.
+**Scenario 2: Priority Filtering (`listtasks p/HIGH`)**
+In this flow, only the initial Gathering loop is required to populate the task list. The filtering happens internally within the viewer.
 
 ![View SKU Task (Priority) Sequence Diagram](plantUML/viewSKUTask-operations/viewSKUTask-prioritySequence.png)
 
-**Scenario 3: SKU ID Filtering (`listtasks n/A123`)** Similar to Priority filtering, the SKU ID is an internal property of the `SKUTask`. The viewer gathers the list and filters it without needing a secondary lookup to the `parentSku`.
+**Scenario 3: SKU ID Filtering (`listtasks n/A123`)**
+Similar to priority filtering, the viewer gathers all tasks via the hierarchy loop and then applies an internal string-match filter for the SKU ID.
 
 ![View SKU Task (SKU ID) Sequence Diagram](plantUML/viewSKUTask-operations/viewSKUTask-SKUSequence.png)
 
+---
+
 #### Architecture
 
-The following class diagram shows how the `ViewSKUTask` logic component interacts with the Model:
+The following class diagram shows how the logic components are structured to support the command flow from **ItemTasker** down to the **ViewSKUTask** processor:
 
 ![View SKU Task Architecture](plantUML/viewSKUTask-operations/viewSKUTask-architecture.png)
 
+---
+
 #### Design Considerations
 
-**Aspect: Data "Flattening" for Global Views:**
+**Aspect: Data "Flattening" for Global Views**
 
-* **Current Implementation:** `ViewSKUTask` manually iterates through the nested `SKU -> SKUTaskList` hierarchy to build a temporary list for filtering/sorting.
-  * *Pros:* Maintains strict encapsulation. Neither `CommandRunner` nor `ViewSKUTask` needs to maintain a redundant global map of tasks, ensuring the `SKU` remains the single source of truth for its tasks.
-  * *Cons:* Performance cost of $O(N)$ where $N$ is the total number of SKUs, as every list must be visited to gather tasks for a global view.
-* **Alternative:** Maintain a `MasterTaskList` in `SKUList` that updates whenever a task is added/deleted.
-  * *Pros:* Sorting and filtering are faster ($O(1)$ to retrieve the base list).
-  * *Cons:* Higher risk of data inconsistency. Deleting an SKU would require purging its specific tasks from the master list, increasing complexity in the `Delete SKU` feature.
+* **Current Implementation:** **ViewSKUTask** manually iterates through the nested **SKU -> SKUTaskList** hierarchy to build a temporary list for filtering/sorting.
+  * **Pros:** Maintains strict encapsulation. Neither **CommandRunner** nor **ViewSKUTask** needs to maintain a redundant global map of tasks, ensuring the **SKU** remains the single source of truth for its tasks.
+  * **Cons:** Performance cost of $O(N)$ where $N$ is the total number of SKUs, as every list must be visited to gather tasks for a global view.
+* **Alternative:** Maintain a `MasterTaskList` in **SKUList** that updates whenever a task is added/deleted.
+  * **Pros:** Sorting and filtering are faster ($O(1)$ to retrieve the base list).
+  * **Cons:** Higher risk of data inconsistency. Deleting an SKU would require purging its specific tasks from the master list, increasing complexity in the `Delete SKU` feature.
 
 ## Appendix A: Product Scope
 
 ### Target user profile
-
-{Describe the target user profile}
+This product is targeted at Inventory Managers of Warehouse Distribution Centers who prefer a CLI UI for fast access and easy tracking.
 
 ### Value proposition
-
-{Describe the value proposition: what problem does it solve?}
+Enterprise systems are often slow and rigid. ItemTracker provides an agile, local layer for managing immediate warehouse tasks. Managers can log and view "action items" on specific stock items without the latency of connecting the servers of enterprise systems. It ensures that critical tasks, (e.g product inspections) are tracked accordingly.
 
 ## Appendix B: User Stories
-
-| Version | As a ... | I want to ...             | So that I can ...                                           |
-|---------|----------|---------------------------|-------------------------------------------------------------|
-| v1.0    | new user | see usage instructions    | refer to them when I forget how to use the application      |
-| v2.0    | user     | find a to-do item by name | locate a to-do without having to go through the entire list |
+| Version | As a ... | I want to ... | So that I can ... |
+|---------|----------|---------------|-------------------|
+| v1.0 | Inventory Manager | register a new SKU | begin tracking accountability tasks for this particular SKU |
+| v1.0 | Inventory Manager | add a task to a specific SKU | ensure necessary inspections are conducted |
+| v1.0 | Inventory Manager | assign a priority level to each task | clear tasks that need to be performed first |
+| v1.0 | Inventory Manager | mark a task as completed for a specific SKU | track the tasks completed in a given day |
+| v1.0 | Inventory Manager | set due dates for tasks assigned to a SKU | quicly locate specific tasks without browsing through the entire list |
+| v1.0 | Inventory Manager | input my current location and sort tasks in terms of distance to me | clear tasks in the warehouse starting with the closest task (in terms of distance) to me |
+| v1.0 | Inventory Manager | delete a task for a specific SKU | not unnecessarily track it if it needs to be dropped |
+| v1.0 | Inventory Manager | view all my tasks in a single dashboard ordered by SKU | know what needs to be completed & plan accordingly |
+| v1.0 | Inventory Manager | set a default priority for all new tasks | speed up the task creation process |
+| v1.0 | Inventory Manager | attach a "Location" to a task | not waste time looking for the item that needs work |
+| v2.0 | Inventory Manager | sort my tasks by priority | complete only high-priority tasks in the event of limited time |
+| v2.0 | Inventory Manager | pull up the tasks only for a specific SKU | complete all the tasks for a given SKU if required |
+| v2.0 | Inventory Manager | search for tasks using keywords | quickly locate specific tasks without browsing through the entire list |
+| v2.0 | Inventory Manager | view a help guide of available commands | learn how to use the CLI without external documentation |
+| v2.0 | Inventory Manager | generate a view of the amount of tasks in each sector of the warehouse | have a birds-eye view of the location of each task |
+| v2.0 | Inventory Manager | add notes or comments to individual task | document observations or special conditions during task execution |
+| v2.0 | Inventory Manager | register a new SKU identifier into a localDB | track specific tasks for an item separately |
+| v2.0 | Inventory Manager | attach an action item to a registered SKU | the condition + quality of the item is monitored |
+| v2.0 | Inventory Manager | assign priority level when creating a task | ensure urgent issues such as expiring goods are attended to in time |
+| v2.0 | Inventory Manager | execute a command to view a dashboard summary of all active SKUs & pending tasks | get instantly get a view of all SKUs without using a complicated GUI |
+| v2.0 | Inventory Manager | mark a task as resolved | clear the queue of outstanding tasks by priority |
+| v2.0 | Inventory Manager | export a list of all high priority tasks to a readable format, e.g CSV | print a physical checklist for warehouse associates who do not have access to the CLI |
+| v2.0 | Inventory Manager | search for a specific SKU id | quickly audit all pending actions for a specific product that might be under inspection / recall |
+| v2.0 | Inventory Manager | edit the description of an existing task | update information efficiently |
 
 ## Appendix C: Non-Functional Requirements
 
-{Give non-functional requirements}
+1. **Environment Requirements:** The system should work on any mainstream OS (Windows, Linux, macOS) as long as it has Java `17` or above installed.
+2. **Data Requirements:** Data should be stored locally in a single `Data/storage.json` file without requiring a standalone database management system. The size of the text file should be kept minimal.
+3. **Performance Requirements:** The system should execute all commands (e.g. adding, deleting, listing) and display the output within two seconds on a standard modern PC.
+4. **Usability (Quality) Requirements:** A user with above-average typing speed for regular English text (i.e., not code, not system admin commands) should be able to accomplish most of the tasks faster using CLI than using a GUI-based application.
+5. **Quality (Robustness) Requirements:** The application should be able to handle invalid user input gracefully without crashing.
+6. **Process Requirements:** The project should follow the milestones set for CS2113 and utilize GitHub Actions for Continuous Integration (CI) and automated testing.
+7. **Maintainability Requirements:** Code should be structured in a modular fashion using Object-Oriented principles to ensure extensibility for future features. Strict Checkstyle rule configurations must be adhered to.
 
 ## Appendix D: Glossary
 
@@ -248,4 +450,46 @@ The following class diagram shows how the `ViewSKUTask` logic component interact
 
 ## Appendix E: Instructions for Manual Testing
 
-{Give instructions on how to do a manual product testing e.g., how to load sample data to be used for testing}
+Given below are instructions to test the app manually.
+
+<div class="alert alert-info">
+<strong>Note:</strong> These instructions only provide a starting point for testers to work on; testers are expected to do more exploratory testing.
+</div>
+
+### Launch and shutdown
+1. **Initial launch**
+  1. Download the latest `.jar` file and copy it into an empty folder.
+  2. Open a terminal in that folder and run `java -jar ItemTasker.jar`.
+  3. *Expected:* The welcome logo appears. A new `Data/` folder is generated in the background.
+
+2. **Shutdown**
+  1. Type `bye`.
+  2. *Expected:* The goodbye message is printed, the application closes, and a storage file is populated in the `Data/` folder.
+
+### Adding and Deleting SKUs and Tasks
+1. **Adding tasks with missing/invalid data**
+  1. *Prerequisite:* Add a valid SKU using `addsku n/PALLET-1 l/A1`.
+  2. *Test case:* `addskutask n/PALLET-1 d/2026-02-30 t/Check items` (Impossible calendar date).
+  3. *Expected:* Task is rejected. Error message informs user the date does not exist.
+  4. *Test case:* `addskutask n/GHOST-SKU d/2026-10-10` (Non-existent SKU).
+  5. *Expected:* Task is rejected. Error message states SKU not found.
+
+2. **Deleting out-of-bounds tasks**
+  1. *Prerequisite:* Ensure `PALLET-1` has exactly 1 task.
+  2. *Test case:* `deletetask n/PALLET-1 i/2`
+  3. *Expected:* Task deletion fails. Error message states index 2 is out of range.
+  4. *Test case:* `deletetask n/PALLET-1 i/-1`
+  5. *Expected:* Task deletion fails. Error message explicitly states task index must be a positive integer.
+
+### Storage and File Integrity
+1. **Dealing with a corrupted JSON file**
+  1. *Prerequisite:* Run the app, add a SKU, type `bye` to save.
+  2. Open `Data/storage.json` in a text editor and randomly delete some quotation marks or brackets to break the JSON syntax. Save the file.
+  3. Launch ItemTasker again.
+  4. *Expected:* The application does not crash. It logs a severe error to the console warning the user about the corrupted JSON and loads an empty warehouse state.
+
+2. **Dealing with an obstructed directory**
+  1. *Prerequisite:* Ensure the application is closed. Delete the `Data` folder if it exists.
+  2. Create a standard text file and name it exactly `Data` (with no file extension).
+  3. Launch ItemTasker and type the `export` command.
+  4. *Expected:* The application attempts to create the `Data/` directory for the export file, realizes a file is blocking it, and safely prints: `[ERROR] Failed to export data: Target path 'Data' exists but is not a directory.` without crashing.

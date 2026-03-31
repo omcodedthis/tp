@@ -8,8 +8,10 @@ import sku.SKUList;
 import java.io.IOException;
 
 /**
- * Main entry-point for the java.duke.ItemTasker application.
+ * Main entry-point for the ItemTasker application.
  */
+
+//@@author omcodedthis
 public class ItemTasker {
 
     /**
@@ -19,6 +21,8 @@ public class ItemTasker {
      * @throws IOException If an error occurs during file loading or saving.
      */
     public static void main(String[] args) throws ItemTaskerException, IOException {
+        ItemTaskerLogger.setup();
+        
         SKUList skuList = new SKUList();
         Ui ui = new Ui();
         CommandRunner runner = new CommandRunner(skuList);

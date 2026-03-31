@@ -14,12 +14,13 @@ import java.io.IOException;
  * the application's running state. Each command category is delegated
  * to a dedicated handler class (SRP).
  */
+//@@author dorndorn54
 public class CommandRunner {
 
     private boolean isRunning;
 
     private final SKUList skuList;
-    private final SkuCommandHandler skuHandler;
+    private final SKUCommandHandler skuHandler;
     private final TaskCommandHandler taskHandler;
     private final ViewCommandHandler viewHandler;
 
@@ -31,7 +32,7 @@ public class CommandRunner {
     public CommandRunner(SKUList skuList) {
         this.skuList = skuList;
         this.isRunning = true;
-        this.skuHandler = new SkuCommandHandler(skuList);
+        this.skuHandler = new SKUCommandHandler(skuList);
         this.taskHandler = new TaskCommandHandler(skuList);
         this.viewHandler = new ViewCommandHandler(skuList);
         Storage.loadState(skuList);
@@ -81,6 +82,9 @@ public class CommandRunner {
         case "unmarktask":
             taskHandler.handleUnmarkTask(cmd);
             break;
+        case "sorttasks":
+            taskHandler.handleSortTask(cmd);
+            break;
         case "listtasks":
             viewHandler.handleListTasks(cmd);
             break;
@@ -92,6 +96,9 @@ public class CommandRunner {
             break;
         case "help":
             Ui.printHelp();
+            break;
+        case "status":
+            viewHandler.handleStatus(cmd);
             break;
         case "viewmap":
             new ViewMap().printTaskMap(this.skuList);

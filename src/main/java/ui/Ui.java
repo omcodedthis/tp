@@ -3,6 +3,7 @@ package ui;
 import sku.SKU;
 import sku.SKUList;
 import skutask.SKUTask;
+import skutask.SKUStatusAnalyzer;
 
 import java.util.List;
 import java.util.Scanner;
@@ -11,6 +12,7 @@ import java.util.Scanner;
  * Handles all console input and output for ItemTasker.
  * Centralises printing so that formatting changes only need to be made here.
  */
+//@@author dorndorn54
 public class Ui {
 
     private static final String DIVIDER = "__________________________________________________________________________";
@@ -106,6 +108,8 @@ public class Ui {
         System.out.println("   deletetask n/SKU_ID i/TASK_INDEX    Delete task at given index.");
         System.out.println("   marktask n/SKU_ID i/TASK_INDEX      Mark a task as completed.");
         System.out.println("   unmarktask n/SKU_ID i/TASK_INDEX    Unmark a completed task.");
+        System.out.println("   sorttasks n/SKU_ID s/SORT_BY        Sort tasks within a SKU (date|priority|status).");
+        System.out.println("         [o/ORDER]                     Optional: ascending (default) or descending.");
         System.out.println();
         System.out.println(" VIEWING");
         System.out.println("   listtasks                           List all tasks.");
@@ -114,6 +118,7 @@ public class Ui {
         System.out.println("   listtasks l/LOCATION                List tasks sorted by distance.");
         System.out.println("   find [n/SKU_ID] [t/DESC] [i/INDEX]  Search tasks by SKU, description, index.");
         System.out.println("   viewmap                             Show warehouse map.");
+        System.out.println("   status [n/SKU_ID]                   Show completion status for SKU(s).");
         System.out.println();
         System.out.println(" OTHER");
         System.out.println("   export                             Export inventory to a readable text file.");
@@ -233,5 +238,63 @@ public class Ui {
         }
         printDivider();
     }
+
+    //@@author AkshayPranav19
+    /**
+     * Prints a sorted list of tasks for a specific SKU.
+     *
+     * @param skuId The SKU identifier for the header.
+     * @param field The sort field used (date, priority, or status).
+     * @param order The sort order used (asc or desc).
+     * @param tasks The sorted list of tasks to display.
+     */
+    public static void printSortedTasks(String skuId, String field, String order, List<SKUTask> tasks) {
+        System.out.println(" Tasks for SKU [" + skuId.toUpperCase() + "] sorted by " + field + " (" + order + "):");
+        printDivider();
+        if (tasks.isEmpty()) {
+            printInfo("No tasks to sort for SKU: " + skuId.toUpperCase());
+        } else {
+            for (int i = 0; i < tasks.size(); i++) {
+                System.out.println((i + 1) + ". " + tasks.get(i));
+            }
+        }
+        printDivider();
+    }
+
+    //@@author SeanTLY23
+    /**
+     * Prints a detailed status breakdown for a single SKU.
+     *
+     * @param result The computed status result for the SKU.
+     */
+    public static void printSkuStatus(SKUStatusAnalyzer.StatusResult result) {
+        System.out.println(" Status for SKU [" + result.getSkuId().toUpperCase() + "]:");
+        printDivider();
+        System.out.println("  Total tasks:           " + result.getTotalTasks());
+        System.out.println("  Completed:             " + result.getCompletedTasks()
+                + " (" + result.getCompletionPercent() + "%)");
+        System.out.println("  Pending:               " + result.getPendingTasks());
+        System.out.println("  Pending HIGH priority: " + result.getPendingHighPriority());
+        System.out.println("  Overdue:               " + result.getOverdueCount());
+        printDivider();
+    }
+
+    /**
+     * Prints a compact warehouse-wide status summary with one line per SKU.
+     *
+     * @param results The list of status results, one per SKU.
+     */
+    public static void printWarehouseStatus(List<SKUStatusAnalyzer.StatusResult> results) {
+        System.out.println(" Warehouse Status Summary:");
+        printDivider();
+        for (SKUStatusAnalyzer.StatusResult r : results) {
+            System.out.println(" SKU [" + r.getSkuId().toUpperCase() + "]: Total: "
+                    + r.getTotalTasks() + " | Done: " + r.getCompletedTasks()
+                    + " (" + r.getCompletionPercent() + "%)" + " | Pending HIGH: "
+                    + r.getPendingHighPriority() + " | Overdue: " + r.getOverdueCount());
+        }
+        printDivider();
+    }
+
 }
 
