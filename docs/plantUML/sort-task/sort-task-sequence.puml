@@ -12,6 +12,7 @@ Participant ":SKU" as sku MODEL_COLOR_T1
 Participant ":SKUTaskList" as taskList MODEL_COLOR_T2
 Participant "<<class>>\nTaskSorter" as taskSorterClass LOGIC_COLOR
 
+
 user -> ui ++ : "sorttasks n/PALLET-A s/date o/ascending"
 ui -> parser ++ : parse(...)
 return cmd : ParsedCommand

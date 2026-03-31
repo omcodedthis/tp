@@ -33,10 +33,6 @@ return taskList
 handler -> taskList ++ : getSize()
 return size
 
-alt index < 1 or index > size
-    handler -> handler : throw InvalidIndexException
-end
-
 handler -> taskList ++ : getSKUTaskList()
 return ArrayList<SKUTask>
 

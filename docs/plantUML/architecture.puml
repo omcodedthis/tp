@@ -116,6 +116,7 @@ TaskCommandHandler -down-> SKUList
 ViewCommandHandler -down-> SKUList
 Export ..> SKUList
 
+
 ' -- Model layer --
 SKUList -down-> "*" SKU
 SKU -down-> "1" SKUTaskList

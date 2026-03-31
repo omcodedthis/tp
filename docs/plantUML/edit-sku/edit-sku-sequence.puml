@@ -1,6 +1,7 @@
 @startuml
 !include ../style.puml
 
+
 Actor User as user USER_COLOR
 Participant ":Ui" as ui UI_COLOR
 Participant ":Parser" as parser LOGIC_COLOR_T1

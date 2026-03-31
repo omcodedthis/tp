@@ -12,6 +12,7 @@ class CommandHelper LOGIC_COLOR {
   + {static} findSkuOrError(skuList, id): SKU
 }
 
+
 class TaskSorter LOGIC_COLOR {
   - sortedTasks: List<SKUTask>
   - sortField: String
