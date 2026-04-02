@@ -586,6 +586,7 @@ This product is targeted at Inventory Managers of Warehouse Distribution Centers
 Enterprise systems are often slow and rigid. ItemTracker provides an agile, local layer for managing immediate warehouse tasks. Managers can log and view "action items" on specific stock items without the latency of connecting the servers of enterprise systems. It ensures that critical tasks, (e.g product inspections) are tracked accordingly.
 
 ## Appendix B: User Stories
+
 | Version | As a ...          | I want to ...                                                                    | So that I can ...                                                                                |
 |---------|-------------------|----------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
 | v1.0    | Inventory Manager | register a new SKU                                                               | begin tracking accountability tasks for this particular SKU                                      |
