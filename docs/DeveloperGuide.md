@@ -14,7 +14,7 @@ We also acknowledge the following for their contributions to our development pro
 
 ItemTasker follows a layered architecture with clear separation of concerns:
 
-![Architecture Diagram](plantUML/architecture.png)
+![Architecture Diagram](diagrams/architecture.png)
 
 **Component Relationships:**
 
@@ -57,7 +57,7 @@ component and its relationship with the Model and UI components:
 The class diagram below illustrates the internal structure of the Command component 
 and its relationship with the Model and UI components:
 
-![Diagram](plantUML/command/command-architecture.png)
+![Diagram](diagrams/command/command-architecture.png)
 
 The `Command` component,
 
@@ -90,7 +90,7 @@ The sequence diagram below illustrates the dispatch lifecycle for a representati
 
 **Command Dispatch Sequence for `CommandRunner`**
 
-![CommandRunner Sequence Diagram](plantUML/command/commandRunnerSequence.png)
+![CommandRunner Sequence Diagram](diagrams/command/commandRunnerSequence.png)
 
 ---
 
@@ -102,7 +102,7 @@ The sequence diagram below illustrates the interactions for the `addsku` command
 
 **Interactions Inside the Command Component for the `addsku` Command**
 
-![Add SKU Sequence Diagram](plantUML/command/skuCommandHandlerSequence.png)
+![Add SKU Sequence Diagram](diagrams/command/skuCommandHandlerSequence.png)
 
 ---
 
@@ -114,15 +114,15 @@ The sequence diagrams below illustrate key interactions within `TaskCommandHandl
 
 **Interactions Inside the Command Component for the `addskutask` Command**
 
-![SKU Task Command Sequence Diagram](plantUML/command/addskutask-command-sequence.png)
+![SKU Task Command Sequence Diagram](diagrams/command/addskutask-command-sequence.png)
 
 **Interactions Inside the Command Component for the `edittask` Command**
 
-![Edit Task Command Sequence Diagram](plantUML/command/edittask-command-sequence.png)
+![Edit Task Command Sequence Diagram](diagrams/command/edittask-command-sequence.png)
 
 **Interactions Inside the Command Component for the `marktask` / `unmarktask` Commands**
 
-![Mark/Unmark Task Command Sequence Diagram](plantUML/command/markunmark-command-sequence.png)
+![Mark/Unmark Task Command Sequence Diagram](diagrams/command/markunmark-command-sequence.png)
 
 ---
 
@@ -134,11 +134,11 @@ The sequence diagrams below illustrate key read paths in `ViewCommandHandler`:
 
 **Interactions Inside the Command Component for the `listtasks` Command**
 
-![List Tasks Sequence Diagram](plantUML/command/listtasks-sequence.png)
+![List Tasks Sequence Diagram](diagrams/command/listtasks-sequence.png)
 
 **Interactions Inside the Command Component for the `find` Command**
 
-![Find Command Sequence Diagram](plantUML/command/find-sequence.png)
+![Find Command Sequence Diagram](diagrams/command/find-sequence.png)
 
 ---
 
@@ -169,7 +169,7 @@ The key design decisions for the `Command` component are summarised below:
 
 The class diagram below illustrates the inheritance hierarchy of the Exception component:
 
-![Exception Architecture Diagram](plantUML/exception/exception-architecture.png)
+![Exception Architecture Diagram](diagrams/exception/exception-architecture.png)
 
 The `Exception` component,
 
@@ -205,7 +205,7 @@ All seven concrete exceptions extend `ItemTaskerException` directly. There is in
 
 **API** : `SKUList.java`, `SKU.java`, `Location.java`.
 
-![Diagram](plantUML/component-sku/component-sku-diagram.png)
+![Diagram](diagrams/component-sku/component-sku-diagram.png)
 
 The `SKU` component,
 
@@ -220,13 +220,13 @@ The `SKU` component,
 
 Here's a class diagram of the SKUTask component:
 
-![SKUTask Architecture Diagram](plantUML/skutask-operations/skutask-architecture.png)
+![SKUTask Architecture Diagram](diagrams/skutask-operations/skutask-architecture.png)
 
 The sequence diagram below illustrates the interactions within the SKUTask component, taking the `addSKUTask` API call as an example.
 
 **Interactions Inside the SKUTask Component for the `addskutask` Command**
 
-![Add SKU Task Sequence Diagram](plantUML/skutask-operations/addTaskSequence.png)
+![Add SKU Task Sequence Diagram](diagrams/skutask-operations/addTaskSequence.png)
 
 How the SKUTask component works:
 
@@ -240,15 +240,15 @@ Here are the other interactions in the SKUTask component (omitted from the seque
 
 **Property Modifications (Setters)**
 
-![Setters Sequence Diagram](plantUML/skutask-operations/settersSequence.png)
+![Setters Sequence Diagram](diagrams/skutask-operations/settersSequence.png)
 
 **Property Retrieval (Getters)**
 
-![Getters Sequence Diagram](plantUML/skutask-operations/gettersSequence.png)
+![Getters Sequence Diagram](diagrams/skutask-operations/gettersSequence.png)
 
 **Task Deletion**
 
-![Delete SKU Task Sequence Diagram](plantUML/skutask-operations/deleteTaskSequence.png)
+![Delete SKU Task Sequence Diagram](diagrams/skutask-operations/deleteTaskSequence.png)
 
 How task properties and deletions work:
 
@@ -259,7 +259,7 @@ Depending on the command, it uses the specific parameter wrappers on the `SKUTas
 
 **API** : `Storage.java` and `Export.java`.
 
-![Diagram](plantUML/component-storage/component-storage-diagram.png)
+![Diagram](diagrams/component-storage/component-storage-diagram.png)
 
 The `Storage` component,
 * can save the warehouse inventory data (the entire `SKUList` hierarchy, including SKUs, SKUTaskLists, and SKUTasks) in JSON format to the hard disk, and read it back into the corresponding objects.
@@ -279,7 +279,7 @@ The UI component handles the lifecycle of user interaction, from capturing raw t
 
 The class diagram below illustrates the structure of the UI component and its relationship with the Logic and Model components:
 
-![UI Architecture Diagram](plantUML/ui/UiComponentArchitecture.png)
+![UI Architecture Diagram](diagrams/ui/UiComponentArchitecture.png)
 
 The UI consists of a core entry point, **ItemTasker**, which orchestrates the interaction between several specialized classes:
 * **Ui**: Manages the `Scanner` for input and provides `static` methods for centralized terminal printing (e.g., success/error messages, headers).
@@ -298,7 +298,7 @@ The sequence diagram below illustrates the standard interaction loop within the 
 
 **Interactions within the UI Component for a Command Lifecycle**
 
-![UI Interaction Sequence Diagram](plantUML/ui/UiComponentSequence.png)
+![UI Interaction Sequence Diagram](diagrams/ui/UiComponentSequence.png)
 
 How the UI interaction loop works:
 1.  **ItemTasker** calls `Ui#readInput()`, which prompts the user with `> ` and waits for a string.
@@ -337,25 +337,25 @@ Given below is an example usage scenario demonstrating how the Add SKU mechanism
 
 **Step 3.** `handleAddSku()` performs validations, checking for missing or empty arguments. It calls `CommandHelper.parseLocation("A1")` to resolve the `Location` enum. It then calls `skuList.findByID("PALLET-A")` to iterate through the `SKUList`. If no duplicates are found, it proceeds with the insertion.
 
-![Steps 1 to 3](plantUML/add-delete-sku/add-sku-step1-3.png)
+![Steps 1 to 3](diagrams/add-delete-sku/add-sku-step1-3.png)
 
 **Step 4.** The `SKUList#addSKU()` method is invoked. This method acts as a secondary defensive barrier, checking inputs before calling the `SKU` constructor. During instantiation, the `SKU` normalizes its ID (trimming whitespace and forcing uppercase) and automatically generates an empty `SKUTaskList` for itself. The `SKU` is then appended to the internal `ArrayList`.
 
-![Step 4](plantUML/add-delete-sku/add-sku-step4.png)
+![Step 4](diagrams/add-delete-sku/add-sku-step4.png)
 
 **Step 5.** Back in `handleAddSku()`, execution completes successfully. Control returns to the `Ui` to print the success message. The system's memory state now contains the new `SKU`, fully equipped to accept tasks without requiring any external mapping.
 
-![Step 5](plantUML/add-delete-sku/add-sku-step5.png)
+![Step 5](diagrams/add-delete-sku/add-sku-step5.png)
 
 *Note: The `deletesku` command operates by routing to `SKUCommandHandler#handleDeleteSku()`, which validates the input and throws a `SKUNotFoundException` if the target does not exist. It then calls `SKUList#deleteSKU()` to perform a case-insensitive removal from the array. Due to encapsulation, dropping the `SKU` object automatically garbage-collects its associated `SKUTaskList`, preventing memory leaks.*
 
 The following sequence diagram shows the flow of adding a SKU:
 
-![Step 5](plantUML/add-delete-sku/add-sku-sequence.png)
+![Step 5](diagrams/add-delete-sku/add-sku-sequence.png)
 
 The following class diagram shows the architecture:
 
-![Step 5](plantUML/add-delete-sku/add-sku-architecture.png)
+![Step 5](diagrams/add-delete-sku/add-sku-architecture.png)
 
 #### Design Considerations
 
@@ -395,11 +395,11 @@ Given below is an example usage scenario demonstrating how the Add SKU Task mech
 
 The following sequence diagram shows the end-to-end flow of adding a SKU Task:
 
-![Add SKU Task Sequence Diagram](plantUML/skutask-operations/addTaskSequence.png)
+![Add SKU Task Sequence Diagram](diagrams/skutask-operations/addTaskSequence.png)
 
 The following sequence diagram shows the end-to-end flow of deleting a SKU Task:
 
-![Delete SKU Task Sequence Diagram](plantUML/skutask-operations/deleteTaskSequence.png)
+![Delete SKU Task Sequence Diagram](diagrams/skutask-operations/deleteTaskSequence.png)
 
 ### Task Property Access (Setters & Getters)
 
@@ -409,15 +409,15 @@ Updating or retrieving a task's state passes entirely from a specific command ha
 
 The following sequence diagram shows the holistic flow of setting properties (e.g., due date, priority, and description via `t/DESC`):
 
-![Setters Sequence Diagram](plantUML/skutask-operations/settersSequence.png)
+![Setters Sequence Diagram](diagrams/skutask-operations/settersSequence.png)
 
 The following sequence diagram illustrates reading properties from the objects for listing (e.g., executing `listtasks n/P-A`). Note that task output is produced by `toString()`, which internally includes the description if non-empty:
 
-![Getters Sequence Diagram](plantUML/skutask-operations/gettersSequence.png)
+![Getters Sequence Diagram](diagrams/skutask-operations/gettersSequence.png)
 
 The following class diagram shows the architecture connecting the `CommandRunner` down to the `SKUTask` instances:
 
-![SKU Task Architecture Class Diagram](plantUML/skutask-operations/skutask-architecture.png)
+![SKU Task Architecture Class Diagram](diagrams/skutask-operations/skutask-architecture.png)
 
 #### Design Considerations
 
@@ -458,11 +458,11 @@ Given below is an example usage scenario for the Edit SKU mechanism.
 
 The following sequence diagram shows the flow of editing a SKU:
 
-![Edit SKU Sequence Diagram](plantUML/edit-sku/edit-sku-sequence.png)
+![Edit SKU Sequence Diagram](diagrams/edit-sku/edit-sku-sequence.png)
 
 The following class diagram shows the architecture:
 
-![Edit SKU Architecture Class Diagram](plantUML/edit-sku/edit-sku-architecture.png)
+![Edit SKU Architecture Class Diagram](diagrams/edit-sku/edit-sku-architecture.png)
 
 #### Edit Task
 
@@ -487,11 +487,11 @@ Given below is an example usage scenario for the Edit Task mechanism.
 
 The following sequence diagram shows the flow of editing a task:
 
-![Edit Task Sequence Diagram](plantUML/edit-task/edit-task-sequence.png)
+![Edit Task Sequence Diagram](diagrams/edit-task/edit-task-sequence.png)
 
 The following class diagram shows the architecture:
 
-![Edit Task Architecture Class Diagram](plantUML/edit-task/edit-task-architecture.png)
+![Edit Task Architecture Class Diagram](diagrams/edit-task/edit-task-architecture.png)
 
 #### Design Considerations
 
@@ -544,17 +544,17 @@ $$\text{Distance} = |x_1 - x_2| + |y_1 - y_2|$$
 **Scenario 1: Spatial Sorting (`listtasks l/B2`)**
 This scenario demonstrates the dual-loop process. The first loop gathers tasks from the hierarchy. The second loop occurs in the **ViewCommandHandler**, which calls `calculateDistance` for each result to format the distance values for the UI display.
 
-![View SKU Task (Distance) Sequence Diagram](plantUML/viewSKUTask-operations/viewSKUTask-distanceSequence.png)
+![View SKU Task (Distance) Sequence Diagram](diagrams/viewSKUTask-operations/viewSKUTask-distanceSequence.png)
 
 **Scenario 2: Priority Filtering (`listtasks p/HIGH`)**
 In this flow, only the initial Gathering loop is required to populate the task list. The filtering happens internally within the viewer.
 
-![View SKU Task (Priority) Sequence Diagram](plantUML/viewSKUTask-operations/viewSKUTask-prioritySequence.png)
+![View SKU Task (Priority) Sequence Diagram](diagrams/viewSKUTask-operations/viewSKUTask-prioritySequence.png)
 
 **Scenario 3: SKU ID Filtering (`listtasks n/A123`)**
 Similar to priority filtering, the viewer gathers all tasks via the hierarchy loop and then applies an internal string-match filter for the SKU ID.
 
-![View SKU Task (SKU ID) Sequence Diagram](plantUML/viewSKUTask-operations/viewSKUTask-SKUSequence.png)
+![View SKU Task (SKU ID) Sequence Diagram](diagrams/viewSKUTask-operations/viewSKUTask-SKUSequence.png)
 
 ---
 
@@ -562,7 +562,7 @@ Similar to priority filtering, the viewer gathers all tasks via the hierarchy lo
 
 The following class diagram shows how the logic components are structured to support the command flow from **ItemTasker** down to the **ViewSKUTask** processor:
 
-![View SKU Task Architecture](plantUML/viewSKUTask-operations/viewSKUTask-architecture.png)
+![View SKU Task Architecture](diagrams/viewSKUTask-operations/viewSKUTask-architecture.png)
 
 ---
 
