@@ -4,23 +4,17 @@ skinparam arrowThickness 1.1
 skinparam classAttributeIconSize 0
 hide circle
 
-class SKUList {
-}
+class SKUList {}
 
-class SKU {
-}
+class SKU {}
 
-class SKUTaskList {
-}
+class SKUTaskList {}
 
-class SKUTask {
-}
+class SKUTask {}
 
-enum Location <<enumeration>> {
-}
+enum Location <<enumeration>> {}
 
-enum Priority <<enumeration>> {
-}
+enum Priority <<enumeration>> {}
 
 SKUList --> "*" SKU : contains
 

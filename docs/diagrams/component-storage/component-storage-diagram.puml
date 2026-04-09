@@ -4,12 +4,11 @@ skinparam arrowThickness 1.1
 skinparam classAttributeIconSize 0
 hide circle
 
-package "Storage Component" {
-    class Storage {}
-    class Export {}
-}
+class Storage {}
 
-class SKUList <<external>> {}
+class Export {}
+
+class SKUList {}
 
 class Gson <<external>> {}
 
