@@ -2,7 +2,7 @@
 
 ## Overview
 
-ItemTasker is a CLI-based Stock Keeping Unit (SKU) Ticketing System. A localized command-line tool designed to handle inventory specific actions required for individual item SKUs such as damage checks, expiry reviews & quality control.
+ItemTasker is a CLI-based Stock Keeping Unit (SKU) Ticketing System. A localized command-line tool designed to handle inventory specific actions required for individual item SKUs.
 
 ## Summary of Contributions
 
@@ -18,7 +18,7 @@ Designed `SKUList.java`, `SKU.java`, `SKUTaskList.java`, and `SKUCommandHandler.
 
 #### Export
 
-Implemented data extraction in `ExportCommand.java` to compile the warehouse state into an OS-agnostic, human-readable text file for auditing (High Difficulty). Built defensive checks against edge-case file states (e.g., existing "Data" files blocking directory creation), autonomously generates directories, and guarantees safe I/O stream closure, rigorously tested in `ExportTest.java`.
+Implemented data extraction in `ExportCommand.java` to compile the warehouse state into an OS-agnostic, human-readable text file for auditing (High Difficulty). Built defensive checks against edge-case file states (e.g., existing "Data" files blocking directory creation), and autonomously generates directories, rigorously tested in `ExportTest.java`.
 
 #### Command Object Instantiation
 
