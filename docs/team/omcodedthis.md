@@ -3,7 +3,7 @@
 ## Overview
 
 ItemTasker is a CLI-based Stock Keeping Unit (SKU) Ticketing System. A localized command-line tool designed to handle
-inventory specific actions required for individual item SKUs such as damage checks, expiry reviews & quality control.
+inventory specific actions required for individual item SKUs.
 
 ## Summary of Contributions
 
@@ -81,6 +81,8 @@ tracker.
 
 ## Contributions to the User Guide (Extracts)
 
+Below is a 1:1 extract pulled from the User Guide, note that only a portion is made available here due to page limits.
+
 ## FAQ
 
 **Q**: How do I transfer my warehouse data to another computer?  
@@ -109,6 +111,8 @@ your `storage.json` file before doing any manual tweaking.
 <div style="page-break-after: always;"></div>
 
 ## Contributions to the Developer Guide (Extracts)
+
+Below is a 1:1 extract pulled from the Developer Guide, note that only a portion is made available here due to page limits.
 
 ### SKU component
 
@@ -201,25 +205,3 @@ its associated `SKUTaskList`, preventing memory leaks.*
 The following sequence diagram shows the flow of adding a SKU:
 
 ![Step 5](../diagrams/add-delete-sku/add-sku-sequence.png)
-
-The following class diagram shows the architecture:
-
-![Step 5](../diagrams/add-delete-sku/add-sku-architecture.png)
-
-#### Design Considerations
-
-**Aspect: How SKU tasks are stored and mapped to their parent SKU:**
-
-* **Current Implementation:** Require all task operations to access the `SKUTaskList` directly through the `SKU` object
-  residing in the `SKUList`.
-    * *Pros:* High cohesion and strict encapsulation. A SKU is solely responsible for its own tasks. Memory overhead is
-      reduced, and state mutations are safer as there is no need to synchronize deletions across multiple data
-      structures.
-    * *Cons:* Slightly slower lookup times, as finding a task requires iterating through the `SKUList` to locate the
-      parent SKU first (O(n) complexity).
-* **Alternative:** Maintain a `HashMap<String, SKUTaskList>` inside the command handlers or `CommandRunner` to map SKU
-  IDs to their tasks.
-    * *Pros:* Fast, O(1) time complexity when looking up tasks for a specific SKU during filtering or task addition.
-    * *Cons:* Severe data duplication and poor encapsulation. This requires the handlers to juggle references and
-      manually synchronize deletions across two separate data structures, leading to an architecture prone to orphaned
-      tasks if not correctly synced.
