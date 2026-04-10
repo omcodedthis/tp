@@ -33,7 +33,7 @@ strictly enforce a read-only data flow.
 
 #### Entry-Loop, Exceptions & Testing
 
-Designed the `while (runner.isRunning())` lifecycle in `ItemTasker.java` and established the `ItemTaskerException.java`
+Designed the `while (runner.isRunning())` main-loop in `ItemTasker.java` and established the `ItemTaskerException.java`
 hierarchy (Moderate Difficulty). Enforced clean separation of concerns in `CommandRunner.java` by translating nested
 domain errors into user-friendly UI messages without leaking stack traces, supported by extensive tests
 like `CommandHandlerTest.java`, achieving an average of 68.6% line coverage.
