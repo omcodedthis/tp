@@ -14,7 +14,7 @@ ItemTasker is a CLI-based Stock Keeping Unit (SKU) Ticketing System. A localized
 
 #### Add / Delete SKU
 
-Designed `SKUList.java`, `SKU.java`, `SKUTaskList.java`, and `SKUCommandHandler.java` for core inventory management of encapsulated `SKUTaskList`s (Moderate Difficulty). Ensures memory-safe `ArrayList` modification and robustly prevents duplicate entries via case-insensitive ID matching, fully validated by `SKUListTest.java` and `SKUTest.java`.
+Created `SKUList.java`, `SKU.java`, `SKUTaskList.java`, and `SKUCommandHandler.java` for core inventory management of encapsulated `SKUTaskList`s (Moderate Difficulty). Ensures memory-safe `ArrayList` modification and robustly prevents duplicate entries via case-insensitive ID matching, fully validated by `SKUListTest.java` and `SKUTest.java`.
 
 #### Export
 
@@ -26,7 +26,7 @@ Designed `ParsedCommand.java` and restructured `Parser.java` to decouple raw CLI
 
 #### Entry-Loop, Exceptions & Testing
 
-Designed the `while (runner.isRunning())` lifecycle in `ItemTasker.java` and established the `ItemTaskerException.java` hierarchy (Moderate Difficulty). Enforced clean separation of concerns in `CommandRunner.java` by translating nested domain errors into user-friendly UI messages without leaking stack traces, supported by extensive tests like `CommandHandlerTest.java`, enabling 68.6% test coverage.
+Designed the `while (runner.isRunning())` lifecycle in `ItemTasker.java` and established the `ItemTaskerException.java` hierarchy (Moderate Difficulty). Enforced clean separation of concerns in `CommandRunner.java` by translating nested domain errors into user-friendly UI messages without leaking stack traces, supported by extensive tests like `CommandHandlerTest.java`, achieving an average of 68.6% line coverage.
 
 ### Contributions to the User Guide (UG)
 
@@ -38,7 +38,7 @@ Authored Q&A segments on saving, data-transfer, and implementation, translating 
 
 #### SKU & Storage Components and Add / Delete SKU Enhancement
 
-Created all UML diagrams and architectural explanations for the SKU & Storage component under Design and Add/Delete feature under Implementation..
+Created all UML diagrams and architectural explanations for the SKU & Storage component under Design and Add/Delete feature under Implementation.
 
 #### Appendix
 
