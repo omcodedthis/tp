@@ -34,6 +34,7 @@ public class SKUCommandHandler {
      *
      * @param cmd The parsed command containing the SKU ID and location.
      * @throws MissingArgumentException If required arguments are missing or empty.
+     * @throws InvalidFilterException   If an unrecognized flag is detected.
      */
     public void handleAddSku(ParsedCommand cmd) throws MissingArgumentException, InvalidFilterException {
         assert cmd != null : "Internal Error: ParsedCommand cannot be null";
@@ -65,8 +66,9 @@ public class SKUCommandHandler {
      * Updates the warehouse location of an existing SKU.
      *
      * @param cmd The parsed command containing the SKU ID and new location.
-     * @throws SKUNotFoundException If the specified SKU does not exist in the
-     *                              warehouse.
+     * @throws SKUNotFoundException   If the specified SKU does not exist in the
+     *                                warehouse.
+     * @throws InvalidFilterException If an unrecognized flag is detected.
      */
     // @@author AkshayPranav19
     public void handleEditSku(ParsedCommand cmd) throws SKUNotFoundException, InvalidFilterException {
@@ -112,6 +114,7 @@ public class SKUCommandHandler {
      * @throws MissingArgumentException If the SKU ID is not provided.
      * @throws SKUNotFoundException     If the specified SKU does not exist in the
      *                                  warehouse.
+     * @throws InvalidFilterException   If an unrecognized flag is detected.
      */
     // @@author omcodedthis
     public void handleDeleteSku(ParsedCommand cmd) throws MissingArgumentException, SKUNotFoundException,

@@ -222,6 +222,7 @@ public class ViewCommandHandler {
      *                                  warehouse.
      * @throws InvalidIndexException    If the task index is not a valid number or
      *                                  is out of range.
+     * @throws InvalidFilterException   If an unrecognized flag is detected.
      */
     public void handleFind(ParsedCommand cmd) throws MissingArgumentException, SKUNotFoundException,
             InvalidIndexException, InvalidFilterException {

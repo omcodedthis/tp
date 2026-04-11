@@ -49,6 +49,7 @@ public class TaskCommandHandler {
      *                                  are missing.
      * @throws SKUNotFoundException     If the target SKU cannot be found in the
      *                                  warehouse.
+     * @throws InvalidFilterException   If an unrecognized flag is detected.
      */
     public void handleAddSkuTask(ParsedCommand cmd) throws MissingArgumentException, SKUNotFoundException,
             InvalidFilterException {
@@ -103,10 +104,11 @@ public class TaskCommandHandler {
      *
      * @param cmd The parsed command containing the SKU ID, task index, and at least
      *            one property to update.
-     * @throws InvalidIndexException If the provided task index is out of bounds or
-     *                               invalid.
-     * @throws SKUNotFoundException  If the target SKU cannot be found in the
-     *                               warehouse.
+     * @throws InvalidIndexException  If the provided task index is out of bounds or
+     *                                invalid.
+     * @throws SKUNotFoundException   If the target SKU cannot be found in the
+     *                                warehouse.
+     * @throws InvalidFilterException If an unrecognized flag is detected.
      */
     public void handleEditTask(ParsedCommand cmd) throws InvalidIndexException, SKUNotFoundException,
             InvalidFilterException {
@@ -187,6 +189,7 @@ public class TaskCommandHandler {
      *                                  warehouse.
      * @throws MissingArgumentException If the required SKU ID or task index
      *                                  arguments are missing.
+     * @throws InvalidFilterException   If an unrecognized flag is detected.
      */
     public void handleDeleteTask(ParsedCommand cmd) throws InvalidIndexException, SKUNotFoundException,
             MissingArgumentException, InvalidFilterException {
@@ -230,6 +233,7 @@ public class TaskCommandHandler {
      *                                  arguments are missing.
      * @throws InvalidIndexException    If the provided task index is out of bounds
      *                                  or invalid.
+     * @throws InvalidFilterException   If an unrecognized flag is detected.
      */
     public void handleMarkTask(ParsedCommand cmd) throws MissingArgumentException, InvalidIndexException,
             InvalidFilterException {
@@ -284,6 +288,7 @@ public class TaskCommandHandler {
      *                                  arguments are missing.
      * @throws InvalidIndexException    If the provided task index is out of bounds
      *                                  or invalid.
+     * @throws InvalidFilterException   If an unrecognized flag is detected.
      */
     public void handleUnmarkTask(ParsedCommand cmd) throws MissingArgumentException, InvalidIndexException,
             InvalidFilterException {
@@ -336,7 +341,8 @@ public class TaskCommandHandler {
      *
      * @param cmd The parsed command containing SKU ID, sort field, and optional
      *            order.
-     * @throws SKUNotFoundException If the specified SKU does not exist.
+     * @throws SKUNotFoundException   If the specified SKU does not exist.
+     * @throws InvalidFilterException If an unrecognized flag is detected.
      */
     // @@author AkshayPranav19
     public void handleSortTask(ParsedCommand cmd) throws SKUNotFoundException, InvalidFilterException {
