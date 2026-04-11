@@ -43,9 +43,9 @@ public class ViewCommandHandler {
      *
      * @param cmd The parsed command containing optional filter arguments.
      * @throws MultipleFilterException If more than one filter flag is provided
-     *                                 (e.g., n/ and p/).
+     * (e.g., n/ and p/).
      * @throws InvalidFilterException  If an unrecognized flag is detected (e.g.,
-     *                                 h/).
+     * h/).
      * @throws SKUNotFoundException    If the specified SKU does not exist.
      */
     public void handleListTasks(ParsedCommand cmd) throws MultipleFilterException, InvalidFilterException,
@@ -224,9 +224,9 @@ public class ViewCommandHandler {
      * @param cmd The parsed command containing the filter flags.
      * @throws MissingArgumentException If no filter flags are provided.
      * @throws SKUNotFoundException     If the specified SKU does not exist in the
-     *                                  warehouse.
+     * warehouse.
      * @throws InvalidIndexException    If the task index is not a valid number or
-     *                                  is out of range.
+     * is out of range.
      * @throws InvalidFilterException   If an unrecognized flag is detected.
      */
     public void handleFind(ParsedCommand cmd) throws MissingArgumentException, SKUNotFoundException,
@@ -238,6 +238,10 @@ public class ViewCommandHandler {
         String skuFilter = cmd.getArg("n");
         String descFilter = cmd.getArg("t");
         String indexStr = cmd.getArg("i");
+
+        if (descFilter != null && descFilter.trim().isEmpty()) {
+            throw new InvalidFilterException("The description keyword after t/ cannot be empty.");
+        }
 
         logger.log(Level.INFO, "Find command invoked. SKU={0}, Desc={1}, Index={2}",
                 new Object[] { skuFilter, descFilter, indexStr });
@@ -286,7 +290,7 @@ public class ViewCommandHandler {
      * @param taskIndex  The 1-based task index filter, or -1 to search all indices.
      * @return A list of pre-formatted result strings for matching tasks.
      * @throws InvalidIndexException If the index is out of range for a filtered
-     *                               SKU.
+     * SKU.
      */
     private List<String> searchTasks(String skuFilter, String descFilter, int taskIndex)
             throws InvalidIndexException {
@@ -309,15 +313,15 @@ public class ViewCommandHandler {
      * @param sku          The SKU to search within.
      * @param descFilter   The description keyword filter, or null to match all.
      * @param taskIndex    The 1-based task index filter, or -1 to search all
-     *                     indices.
+     * indices.
      * @param hasSkuFilter Whether the user specified a SKU filter (affects error
-     *                     behaviour).
+     * behaviour).
      * @param results      The accumulator list for formatted result strings.
      * @throws InvalidIndexException If the index is out of range and a SKU filter
-     *                               was specified.
+     * was specified.
      */
     private void searchTasksInSku(SKU sku, String descFilter, int taskIndex,
-            boolean hasSkuFilter, List<String> results) throws InvalidIndexException {
+                                  boolean hasSkuFilter, List<String> results) throws InvalidIndexException {
         assert sku != null : "SKU should not be null";
         assert results != null : "Results list should not be null";
 
@@ -342,10 +346,10 @@ public class ViewCommandHandler {
      * @param hasSkuFilter Whether the user specified a SKU filter.
      * @param results      The accumulator list for formatted result strings.
      * @throws InvalidIndexException If the index is out of range and a SKU filter
-     *                               was specified.
+     * was specified.
      */
     private void searchByIndex(SKU sku, ArrayList<SKUTask> tasks, String descFilter,
-            int taskIndex, boolean hasSkuFilter, List<String> results)
+                               int taskIndex, boolean hasSkuFilter, List<String> results)
             throws InvalidIndexException {
         assert taskIndex > 0 : "Task index must be positive, got: " + taskIndex;
         logger.log(Level.FINE, "Searching by index {0} in SKU {1}",
