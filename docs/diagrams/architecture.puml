@@ -1,0 +1,127 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam monochrome true
+skinparam nodesep 25
+skinparam ranksep 40
+hide circle
+
+class ItemTasker {
+  + main(args: String[]): void
+}
+
+class Parser {
+  + {static} parse(input): ParsedCommand
+}
+
+class Ui {
+  + readInput(): String
+}
+
+class CommandRunner {
+  + run(cmd: ParsedCommand): void
+  + isRunning(): boolean
+}
+
+class SKUCommandHandler {
+  + handleAddSku(cmd): void
+  + handleEditSku(cmd): void
+  + handleDeleteSku(cmd): void
+}
+
+class TaskCommandHandler {
+  + handleAddSkuTask(cmd): void
+  + handleEditTask(cmd): void
+  + handleDeleteTask(cmd): void
+  + handleMarkTask(cmd): void
+  + handleUnmarkTask(cmd): void
+  + handleSortTask(cmd): void
+}
+
+class ViewCommandHandler {
+  + handleListTasks(cmd): void
+  + handleFind(cmd): void
+  + handleStatus(cmd): void
+}
+
+class CommandHelper {
+  + {static} findSkuOrError(skuList, id): SKU
+  + {static} parseLocation(str): Location
+  + {static} parsePriority(str): Priority
+  + {static} parseIndex(str): int
+}
+
+class DateValidator {
+  + {static} isValidDate(str): boolean
+  + {static} validateDateOrError(str): String
+}
+
+class TaskSorter {
+  + getSortedTasks(): List<SKUTask>
+  + {static} isValidSortField(field): boolean
+}
+
+class SKUList {
+  + addSKU(id, loc): void
+  + deleteSKU(id): void
+  + findByID(id): SKU
+}
+
+class SKU {
+  - skuID: String
+  - skuLocation: Location
+}
+
+class SKUTaskList {
+  + editSKUTask(...): void
+  + markTask(index): void
+  + unmarkTask(index): void
+}
+
+class SKUTask {
+  - priority: Priority
+  - dueDate: String
+  - isDone: boolean
+}
+
+class Storage {
+  + {static} saveState(skuList): void
+  + {static} loadState(skuList): void
+}
+
+class Export {
+  + {static} exportToTextFile(skuList): void
+}
+
+' -- UI layer --
+ItemTasker -down-> CommandRunner
+ItemTasker -right-> Ui
+ItemTasker ..> Parser
+
+' -- Logic layer --
+CommandRunner -down-> SKUCommandHandler
+CommandRunner -down-> TaskCommandHandler
+CommandRunner -down-> ViewCommandHandler
+CommandRunner ..> Storage
+CommandRunner ..> Export
+
+' -- Shared utilities --
+SKUCommandHandler ..> CommandHelper
+TaskCommandHandler ..> CommandHelper
+ViewCommandHandler ..> CommandHelper
+TaskCommandHandler ..> DateValidator
+TaskCommandHandler ..> TaskSorter
+
+' -- All handlers to model --
+SKUCommandHandler -down-> SKUList
+TaskCommandHandler -down-> SKUList
+ViewCommandHandler -down-> SKUList
+Export ..> SKUList
+
+
+' -- Model layer --
+SKUList -down-> "*" SKU
+SKU -down-> "1" SKUTaskList
+SKUTaskList -down-> "*" SKUTask
+
+@enduml

@@ -1,0 +1,34 @@
+@startuml
+!include ../style.puml
+skinparam arrowThickness 1.1
+skinparam classAttributeIconSize 0
+hide circle
+
+class SKUList {}
+
+class SKU {}
+
+class SKUTaskList {}
+
+class SKUTask {}
+
+enum Location <<enumeration>> {}
+
+enum Priority <<enumeration>> {}
+
+SKUList --> "*" SKU : contains
+
+SKU --> "1" SKUTaskList : encapsulates
+SKU --> "1" Location : located at
+
+SKUTaskList --> "*" SKUTask : contains
+
+SKUTask --> "1" Priority : priority level
+
+SKUList -[hidden]down- SKU
+SKU -[hidden]down- SKUTaskList
+SKUTaskList -[hidden]down- SKUTask
+SKU -[hidden]down- Location
+SKUTask -[hidden]down- Priority
+
+@enduml

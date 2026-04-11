@@ -1,0 +1,21 @@
+@startuml
+!include ../style.puml
+skinparam arrowThickness 1.1
+skinparam classAttributeIconSize 0
+hide circle
+
+class Storage {}
+
+class Export {}
+
+class SKUList {}
+
+class Gson <<external>> {}
+
+Storage ..> SKUList : uses
+Export ..> SKUList : uses
+Storage ..> Gson : serializes/deserializes with
+
+Storage -[hidden]right- Export
+
+@enduml

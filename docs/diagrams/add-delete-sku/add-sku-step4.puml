@@ -1,0 +1,21 @@
+@startuml
+!include ../style.puml
+skinparam arrowThickness 1.1
+skinparam classAttributeIconSize 0
+hide circle
+
+title System Memory State (Step 4)
+
+class "<u>skuList:SKUList</u>" as skuList
+
+class "<u>sku:SKU</u>" as sku {
+    skuID = "PALLET-A"
+    skuLocation = Location.A1
+}
+
+class "<u>skuTaskList:SKUTaskList</u>" as taskList
+
+skuList .right.> sku : instantiates & adds >
+sku *-- taskList : auto-initializes >
+
+@enduml

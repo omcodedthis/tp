@@ -14,7 +14,7 @@ We also acknowledge the following for their contributions to our development pro
 
 ItemTasker follows a layered architecture with clear separation of concerns:
 
-![Architecture Diagram](plantUML/architecture.png)
+![Architecture Diagram](diagrams/architecture.png)
 
 **Component Relationships:**
 
@@ -57,7 +57,7 @@ component and its relationship with the Model and UI components:
 The class diagram below illustrates the internal structure of the Command component 
 and its relationship with the Model and UI components:
 
-![Diagram](docs/plantUML/command/command-architecture.png)
+![Diagram](diagrams/command/command-architecture.png)
 
 The `Command` component,
 
@@ -76,7 +76,7 @@ The `Command` component,
 
 `ParsedCommand` is an immutable value object produced by `Parser` and consumed by every handler. 
 It exposes three query methods — `getCommandWord()`, `getArg(key)`, and `hasArg(key)` — and a 
-`getAllFlags()` set used by `ViewCommandHandler` for strict flag validation. Both the command 
+`getAllFlags()` set used by `CommandHelper.validateFlags()` for strict flag validation across all handlers. Both the command 
 word and all flag keys are normalized to lowercase at construction time, so handlers can safely 
 use literal lowercase strings in comparisons.
 
@@ -90,7 +90,7 @@ The sequence diagram below illustrates the dispatch lifecycle for a representati
 
 **Command Dispatch Sequence for `CommandRunner`**
 
-![CommandRunner Sequence Diagram](docs/plantUML/command/commandRunnerSequence.png)
+![CommandRunner Sequence Diagram](diagrams/command/commandRunnerSequence.png)
 
 ---
 
@@ -102,7 +102,7 @@ The sequence diagram below illustrates the interactions for the `addsku` command
 
 **Interactions Inside the Command Component for the `addsku` Command**
 
-![Add SKU Sequence Diagram](docs/plantUML/command/skuCommandHandlerSequence.png)
+![Add SKU Sequence Diagram](diagrams/command/skuCommandHandlerSequence.png)
 
 ---
 
@@ -114,38 +114,39 @@ The sequence diagrams below illustrate key interactions within `TaskCommandHandl
 
 **Interactions Inside the Command Component for the `addskutask` Command**
 
-![SKU Task Command Sequence Diagram](docs/plantUML/command/addskutask-command-sequence.png)
+![SKU Task Command Sequence Diagram](diagrams/command/addskutask-command-sequence.png)
 
 **Interactions Inside the Command Component for the `edittask` Command**
 
-![Edit Task Command Sequence Diagram](docs/plantUML/command/edittask-command-sequence.png)
+![Edit Task Command Sequence Diagram](diagrams/command/edittask-command-sequence.png)
 
 **Interactions Inside the Command Component for the `marktask` / `unmarktask` Commands**
 
-![Mark/Unmark Task Command Sequence Diagram](docs/plantUML/command/markunmark-command-sequence.png)
+![Mark/Unmark Task Command Sequence Diagram](diagrams/command/markunmark-command-sequence.png)
 
 ---
 
 #### `ViewCommandHandler`
 
-Handles the three read-only commands: `listtasks`, `find`, and `status`. It applies strict flag validation (throwing `InvalidFilterException` for unrecognized flags and `MultipleFilterException` if more than one filter is combined on `listtasks`) before delegating to private sub-methods following the SLAP principle. The `find` command supports combinable filters (`n/`, `t/`, `i/`) and traverses the entire `SKUList`, accumulating formatted result strings before handing them to `Ui` for display in one call.
+Handles the three read-only commands: `listtasks`, `find`, and `status`. Like all handlers, it validates flags via `CommandHelper.validateFlags()` (throwing `InvalidFilterException` for unrecognized flags). Additionally, it enforces `MultipleFilterException` if more than one filter is combined on `listtasks`. It then delegates to private sub-methods following the SLAP principle. The `find` command supports combinable filters (`n/`, `t/`, `i/`) and traverses the entire `SKUList`, accumulating formatted result strings before handing them to `Ui` for display in one call.
 
 The sequence diagrams below illustrate key read paths in `ViewCommandHandler`:
 
 **Interactions Inside the Command Component for the `listtasks` Command**
 
-![List Tasks Sequence Diagram](docs/plantUML/command/listtasks-sequence.png)
+![List Tasks Sequence Diagram](diagrams/command/listtasks-sequence.png)
 
 **Interactions Inside the Command Component for the `find` Command**
 
-![Find Command Sequence Diagram](docs/plantUML/command/find-sequence.png)
+![Find Command Sequence Diagram](diagrams/command/find-sequence.png)
 
 ---
 
 #### `CommandHelper` and `DateValidator`
 
-These two classes are pure utilities with no state. `CommandHelper` centralises six 
-shared operations used across all three handler classes: SKU lookup with error printing 
+These two classes are pure utilities with no state. `CommandHelper` centralises seven 
+shared operations used across all three handler classes: flag validation (`validateFlags`),
+SKU lookup with error printing 
 (`findSkuOrError`), `Location` parsing (`parseLocation`), `Priority` parsing (`parsePriority
 ` and `parsePriorityOrDefault`), integer index parsing (`parseIndex`), and description-keyword
 matching (`matchesDescription`). `DateValidator` isolates date validation behind a two-step check 
@@ -169,7 +170,7 @@ The key design decisions for the `Command` component are summarised below:
 
 The class diagram below illustrates the inheritance hierarchy of the Exception component:
 
-![Exception Architecture Diagram](docs/plantUML/exception/exception-architecture.png)
+![Exception Architecture Diagram](diagrams/exception/exception-architecture.png)
 
 The `Exception` component,
 
@@ -186,8 +187,8 @@ All seven concrete exceptions extend `ItemTaskerException` directly. There is in
 
 * **`EmptyListException`** — thrown when an operation (e.g., listing or sorting) is attempted on a list that contains no items. Accepts a `listType` string to identify which list was empty.
 * **`InvalidCommandException`** — thrown when the user enters an unrecognized, malformed, or syntactically incorrect command word.
-* **`InvalidFilterException`** — thrown by `ViewCommandHandler` when an unrecognized flag is detected on `listtasks` or `status`, or when a filter value is syntactically incorrect.
-* **`InvalidIndexException`** — thrown when a task index is either out of bounds for its SKU's task list, or cannot be parsed as a valid integer. Provides two constructors to cover both cases distinctly.
+* **`InvalidFilterException`** — thrown by all command handlers (via `CommandHelper.validateFlags()`) when an unrecognized flag is detected, or when a filter value is syntactically incorrect.
+* **`InvalidIndexException`** — thrown when a task index is either out of bounds for its SKU's task list, cannot be parsed as a valid integer, or overflows integer limits. Provides three constructors to cover all these cases distinctly.
 * **`MissingArgumentException`** — thrown when a required flag (e.g., `n/` or `d/`) is absent from a command. The message always includes the correct usage string for the offending command.
 * **`MultipleFilterException`** — thrown by `ViewCommandHandler` when more than one filter flag (`n/`, `p/`, `l/`) is provided simultaneously on a `listtasks` command, which only supports a single filter at a time.
 * **`SKUNotFoundException`** — thrown when a SKU ID provided by the user does not exist in the warehouse. The message includes the missing ID and directs the user to `listtasks`.
@@ -205,7 +206,7 @@ All seven concrete exceptions extend `ItemTaskerException` directly. There is in
 
 **API** : `SKUList.java`, `SKU.java`, `Location.java`.
 
-![Diagram](plantUML/component-sku/component-sku-diagram.png)
+![Diagram](diagrams/component-sku/component-sku-diagram.png)
 
 The `SKU` component,
 
@@ -220,13 +221,13 @@ The `SKU` component,
 
 Here's a class diagram of the SKUTask component:
 
-![SKUTask Architecture Diagram](plantUML/skutask-operations/skutask-architecture.png)
+![SKUTask Architecture Diagram](diagrams/skutask-operations/skutask-architecture.png)
 
 The sequence diagram below illustrates the interactions within the SKUTask component, taking the `addSKUTask` API call as an example.
 
 **Interactions Inside the SKUTask Component for the `addskutask` Command**
 
-![Add SKU Task Sequence Diagram](plantUML/skutask-operations/addTaskSequence.png)
+![Add SKU Task Sequence Diagram](diagrams/skutask-operations/addTaskSequence.png)
 
 How the SKUTask component works:
 
@@ -240,15 +241,15 @@ Here are the other interactions in the SKUTask component (omitted from the seque
 
 **Property Modifications (Setters)**
 
-![Setters Sequence Diagram](plantUML/skutask-operations/settersSequence.png)
+![Setters Sequence Diagram](diagrams/skutask-operations/settersSequence.png)
 
 **Property Retrieval (Getters)**
 
-![Getters Sequence Diagram](plantUML/skutask-operations/gettersSequence.png)
+![Getters Sequence Diagram](diagrams/skutask-operations/gettersSequence.png)
 
 **Task Deletion**
 
-![Delete SKU Task Sequence Diagram](plantUML/skutask-operations/deleteTaskSequence.png)
+![Delete SKU Task Sequence Diagram](diagrams/skutask-operations/deleteTaskSequence.png)
 
 How task properties and deletions work:
 
@@ -259,7 +260,7 @@ Depending on the command, it uses the specific parameter wrappers on the `SKUTas
 
 **API** : `Storage.java` and `Export.java`.
 
-![Diagram](plantUML/component-storage/component-storage-diagram.png)
+![Diagram](diagrams/component-storage/component-storage-diagram.png)
 
 The `Storage` component,
 * can save the warehouse inventory data (the entire `SKUList` hierarchy, including SKUs, SKUTaskLists, and SKUTasks) in JSON format to the hard disk, and read it back into the corresponding objects.
@@ -279,7 +280,7 @@ The UI component handles the lifecycle of user interaction, from capturing raw t
 
 The class diagram below illustrates the structure of the UI component and its relationship with the Logic and Model components:
 
-![UI Architecture Diagram](plantUML/ui/UiComponentArchitecture.png)
+![UI Architecture Diagram](diagrams/ui/UiComponentArchitecture.png)
 
 The UI consists of a core entry point, **ItemTasker**, which orchestrates the interaction between several specialized classes:
 * **Ui**: Manages the `Scanner` for input and provides `static` methods for centralized terminal printing (e.g., success/error messages, headers).
@@ -298,7 +299,7 @@ The sequence diagram below illustrates the standard interaction loop within the 
 
 **Interactions within the UI Component for a Command Lifecycle**
 
-![UI Interaction Sequence Diagram](plantUML/ui/UiComponentSequence.png)
+![UI Interaction Sequence Diagram](diagrams/ui/UiComponentSequence.png)
 
 How the UI interaction loop works:
 1.  **ItemTasker** calls `Ui#readInput()`, which prompts the user with `> ` and waits for a string.
@@ -337,25 +338,25 @@ Given below is an example usage scenario demonstrating how the Add SKU mechanism
 
 **Step 3.** `handleAddSku()` performs validations, checking for missing or empty arguments. It calls `CommandHelper.parseLocation("A1")` to resolve the `Location` enum. It then calls `skuList.findByID("PALLET-A")` to iterate through the `SKUList`. If no duplicates are found, it proceeds with the insertion.
 
-![Steps 1 to 3](plantUML/add-delete-sku/add-sku-step1-3.png)
+![Steps 1 to 3](diagrams/add-delete-sku/add-sku-step1-3.png)
 
 **Step 4.** The `SKUList#addSKU()` method is invoked. This method acts as a secondary defensive barrier, checking inputs before calling the `SKU` constructor. During instantiation, the `SKU` normalizes its ID (trimming whitespace and forcing uppercase) and automatically generates an empty `SKUTaskList` for itself. The `SKU` is then appended to the internal `ArrayList`.
 
-![Step 4](plantUML/add-delete-sku/add-sku-step4.png)
+![Step 4](diagrams/add-delete-sku/add-sku-step4.png)
 
 **Step 5.** Back in `handleAddSku()`, execution completes successfully. Control returns to the `Ui` to print the success message. The system's memory state now contains the new `SKU`, fully equipped to accept tasks without requiring any external mapping.
 
-![Step 5](plantUML/add-delete-sku/add-sku-step5.png)
+![Step 5](diagrams/add-delete-sku/add-sku-step5.png)
 
 *Note: The `deletesku` command operates by routing to `SKUCommandHandler#handleDeleteSku()`, which validates the input and throws a `SKUNotFoundException` if the target does not exist. It then calls `SKUList#deleteSKU()` to perform a case-insensitive removal from the array. Due to encapsulation, dropping the `SKU` object automatically garbage-collects its associated `SKUTaskList`, preventing memory leaks.*
 
 The following sequence diagram shows the flow of adding a SKU:
 
-![Step 5](plantUML/add-delete-sku/add-sku-sequence.png)
+![Sequence Diagram](diagrams/add-delete-sku/add-sku-sequence.png)
 
 The following class diagram shows the architecture:
 
-![Step 5](plantUML/add-delete-sku/add-sku-architecture.png)
+![Class Diagram](diagrams/add-delete-sku/add-sku-architecture.png)
 
 #### Design Considerations
 
@@ -395,11 +396,11 @@ Given below is an example usage scenario demonstrating how the Add SKU Task mech
 
 The following sequence diagram shows the end-to-end flow of adding a SKU Task:
 
-![Add SKU Task Sequence Diagram](plantUML/skutask-operations/addTaskSequence.png)
+![Add SKU Task Sequence Diagram](diagrams/skutask-operations/addTaskSequence.png)
 
 The following sequence diagram shows the end-to-end flow of deleting a SKU Task:
 
-![Delete SKU Task Sequence Diagram](plantUML/skutask-operations/deleteTaskSequence.png)
+![Delete SKU Task Sequence Diagram](diagrams/skutask-operations/deleteTaskSequence.png)
 
 ### Task Property Access (Setters & Getters)
 
@@ -409,15 +410,15 @@ Updating or retrieving a task's state passes entirely from a specific command ha
 
 The following sequence diagram shows the holistic flow of setting properties (e.g., due date, priority, and description via `t/DESC`):
 
-![Setters Sequence Diagram](plantUML/skutask-operations/settersSequence.png)
+![Setters Sequence Diagram](diagrams/skutask-operations/settersSequence.png)
 
 The following sequence diagram illustrates reading properties from the objects for listing (e.g., executing `listtasks n/P-A`). Note that task output is produced by `toString()`, which internally includes the description if non-empty:
 
-![Getters Sequence Diagram](plantUML/skutask-operations/gettersSequence.png)
+![Getters Sequence Diagram](diagrams/skutask-operations/gettersSequence.png)
 
 The following class diagram shows the architecture connecting the `CommandRunner` down to the `SKUTask` instances:
 
-![SKU Task Architecture Class Diagram](plantUML/skutask-operations/skutask-architecture.png)
+![SKU Task Architecture Class Diagram](diagrams/skutask-operations/skutask-architecture.png)
 
 #### Design Considerations
 
@@ -458,11 +459,11 @@ Given below is an example usage scenario for the Edit SKU mechanism.
 
 The following sequence diagram shows the flow of editing a SKU:
 
-![Edit SKU Sequence Diagram](plantUML/edit-sku/edit-sku-sequence.png)
+![Edit SKU Sequence Diagram](diagrams/edit-sku/edit-sku-sequence.png)
 
 The following class diagram shows the architecture:
 
-![Edit SKU Architecture Class Diagram](plantUML/edit-sku/edit-sku-architecture.png)
+![Edit SKU Architecture Class Diagram](diagrams/edit-sku/edit-sku-architecture.png)
 
 #### Edit Task
 
@@ -487,11 +488,11 @@ Given below is an example usage scenario for the Edit Task mechanism.
 
 The following sequence diagram shows the flow of editing a task:
 
-![Edit Task Sequence Diagram](plantUML/edit-task/edit-task-sequence.png)
+![Edit Task Sequence Diagram](diagrams/edit-task/edit-task-sequence.png)
 
 The following class diagram shows the architecture:
 
-![Edit Task Architecture Class Diagram](plantUML/edit-task/edit-task-architecture.png)
+![Edit Task Architecture Class Diagram](diagrams/edit-task/edit-task-architecture.png)
 
 #### Design Considerations
 
@@ -544,17 +545,17 @@ $$\text{Distance} = |x_1 - x_2| + |y_1 - y_2|$$
 **Scenario 1: Spatial Sorting (`listtasks l/B2`)**
 This scenario demonstrates the dual-loop process. The first loop gathers tasks from the hierarchy. The second loop occurs in the **ViewCommandHandler**, which calls `calculateDistance` for each result to format the distance values for the UI display.
 
-![View SKU Task (Distance) Sequence Diagram](plantUML/viewSKUTask-operations/viewSKUTask-distanceSequence.png)
+![View SKU Task (Distance) Sequence Diagram](diagrams/viewSKUTask-operations/viewSKUTask-distanceSequence.png)
 
 **Scenario 2: Priority Filtering (`listtasks p/HIGH`)**
 In this flow, only the initial Gathering loop is required to populate the task list. The filtering happens internally within the viewer.
 
-![View SKU Task (Priority) Sequence Diagram](plantUML/viewSKUTask-operations/viewSKUTask-prioritySequence.png)
+![View SKU Task (Priority) Sequence Diagram](diagrams/viewSKUTask-operations/viewSKUTask-prioritySequence.png)
 
 **Scenario 3: SKU ID Filtering (`listtasks n/A123`)**
 Similar to priority filtering, the viewer gathers all tasks via the hierarchy loop and then applies an internal string-match filter for the SKU ID.
 
-![View SKU Task (SKU ID) Sequence Diagram](plantUML/viewSKUTask-operations/viewSKUTask-SKUSequence.png)
+![View SKU Task (SKU ID) Sequence Diagram](diagrams/viewSKUTask-operations/viewSKUTask-SKUSequence.png)
 
 ---
 
@@ -562,7 +563,7 @@ Similar to priority filtering, the viewer gathers all tasks via the hierarchy lo
 
 The following class diagram shows how the logic components are structured to support the command flow from **ItemTasker** down to the **ViewSKUTask** processor:
 
-![View SKU Task Architecture](plantUML/viewSKUTask-operations/viewSKUTask-architecture.png)
+![View SKU Task Architecture](diagrams/viewSKUTask-operations/viewSKUTask-architecture.png)
 
 ---
 
@@ -586,33 +587,34 @@ This product is targeted at Inventory Managers of Warehouse Distribution Centers
 Enterprise systems are often slow and rigid. ItemTracker provides an agile, local layer for managing immediate warehouse tasks. Managers can log and view "action items" on specific stock items without the latency of connecting the servers of enterprise systems. It ensures that critical tasks, (e.g product inspections) are tracked accordingly.
 
 ## Appendix B: User Stories
-| Version | As a ... | I want to ...                                                                    | So that I can ...                                                                                |
-|---------|----------|----------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
-| v1.0 | Inventory Manager | register a new SKU                                                               | begin tracking accountability tasks for this particular SKU                                      |
-| v1.0 | Inventory Manager | add a task to a specific SKU                                                     | ensure necessary inspections are conducted                                                       |
-| v1.0 | Inventory Manager | assign a priority level to each task                                             | clear tasks that need to be performed first                                                      |
-| v1.0 | Inventory Manager | mark a task as completed for a specific SKU                                      | track the tasks completed in a given day                                                         |
-| v1.0 | Inventory Manager | set due dates for tasks assigned to a SKU                                        | quicly locate specific tasks without browsing through the entire list                            |
-| v1.0 | Inventory Manager | input my current location and sort tasks in terms of distance to me              | clear tasks in the warehouse starting with the closest task (in terms of distance) to me         |
-| v1.0 | Inventory Manager | delete a task for a specific SKU                                                 | not unnecessarily track it if it needs to be dropped                                             |
-| v1.0 | Inventory Manager | view all my tasks in a single dashboard ordered by SKU                           | know what needs to be completed & plan accordingly                                               |
-| v1.0 | Inventory Manager | set a default priority for all new tasks                                         | speed up the task creation process                                                               |
-| v1.0 | Inventory Manager | attach a "Location" to a task                                                    | not waste time looking for the item that needs work                                              |
-| v2.0 | Inventory Manager | sort my tasks by priority                                                        | complete only high-priority tasks in the event of limited time                                   |
-| v2.0 | Inventory Manager | pull up the tasks only for a specific SKU                                        | complete all the tasks for a given SKU if required                                               |
-| v2.0 | Inventory Manager | search for tasks using keywords                                                  | quickly locate specific tasks without browsing through the entire list                           |
-| v2.0 | Inventory Manager | view a help guide of available commands                                          | learn how to use the CLI without external documentation                                          |
-| v2.0 | Inventory Manager | generate a view of the amount of tasks in each sector of the warehouse           | have a birds-eye view of the location of each task                                               |
-| v2.0 | Inventory Manager | add notes or comments to individual task                                         | document observations or special conditions during task execution                                |
-| v2.0 | Inventory Manager | register a new SKU identifier into a localDB                                     | track specific tasks for an item separately                                                      |
-| v2.0 | Inventory Manager | attach an action item to a registered SKU                                        | the condition + quality of the item is monitored                                                 |
-| v2.0 | Inventory Manager | assign priority level when creating a task                                       | ensure urgent issues such as expiring goods are attended to in time                              |
-| v2.0 | Inventory Manager | execute a command to view a dashboard summary of all active SKUs & pending tasks | get instantly get a view of all SKUs without using a complicated GUI                             |
-| v2.0 | Inventory Manager | mark a task as resolved                                                          | clear the queue of outstanding tasks by priority                                                 |
-| v2.0 | Inventory Manager | export a list of all high priority tasks to a readable format, e.g CSV           | print a physical checklist for warehouse associates who do not have access to the CLI            |
-| v2.0 | Inventory Manager | search for a specific SKU id                                                     | quickly audit all pending actions for a specific product that might be under inspection / recall |
-| v2.0 | Inventory Manager | edit the description of an existing task                                         | update information efficiently                                                                   |
-| v2.0 | Inventory Manager | conduct an analysis on a SKU                                                     | for reporting and analytics to colleagues                                                        |
+
+| Version | As a ...          | I want to ...                                                                    | So that I can ...                                                                                |
+|---------|-------------------|----------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| v1.0    | Inventory Manager | register a new SKU                                                               | begin tracking accountability tasks for this particular SKU                                      |
+| v1.0    | Inventory Manager | add a task to a specific SKU                                                     | ensure necessary inspections are conducted                                                       |
+| v1.0    | Inventory Manager | assign a priority level to each task                                             | clear tasks that need to be performed first                                                      |
+| v1.0    | Inventory Manager | mark a task as completed for a specific SKU                                      | track the tasks completed in a given day                                                         |
+| v1.0    | Inventory Manager | set due dates for tasks assigned to a SKU                                        | quickly locate specific tasks without browsing through the entire list                           |
+| v1.0    | Inventory Manager | input my current location and sort tasks in terms of distance to me              | clear tasks in the warehouse starting with the closest task (in terms of distance) to me         |
+| v1.0    | Inventory Manager | delete a task for a specific SKU                                                 | not unnecessarily track it if it needs to be dropped                                             |
+| v1.0    | Inventory Manager | view all my tasks in a single dashboard ordered by SKU                           | know what needs to be completed & plan accordingly                                               |
+| v1.0    | Inventory Manager | set a default priority for all new tasks                                         | speed up the task creation process                                                               |
+| v1.0    | Inventory Manager | attach a "Location" to a task                                                    | not waste time looking for the item that needs work                                              |
+| v2.0    | Inventory Manager | sort my tasks by priority                                                        | complete only high-priority tasks in the event of limited time                                   |
+| v2.0    | Inventory Manager | pull up the tasks only for a specific SKU                                        | complete all the tasks for a given SKU if required                                               |
+| v2.0    | Inventory Manager | search for tasks using keywords                                                  | quickly locate specific tasks without browsing through the entire list                           |
+| v2.0    | Inventory Manager | view a help guide of available commands                                          | learn how to use the CLI without external documentation                                          |
+| v2.0    | Inventory Manager | generate a view of the amount of tasks in each sector of the warehouse           | have a birds-eye view of the location of each task                                               |
+| v2.0    | Inventory Manager | add notes or comments to individual task                                         | document observations or special conditions during task execution                                |
+| v2.0    | Inventory Manager | register a new SKU identifier into a localDB                                     | track specific tasks for an item separately                                                      |
+| v2.0    | Inventory Manager | attach an action item to a registered SKU                                        | the condition + quality of the item is monitored                                                 |
+| v2.0    | Inventory Manager | assign priority level when creating a task                                       | ensure urgent issues such as expiring goods are attended to in time                              |
+| v2.0    | Inventory Manager | execute a command to view a dashboard summary of all active SKUs & pending tasks | instantly get a view of all SKUs without using a complicated GUI                                 |
+| v2.0    | Inventory Manager | mark a task as resolved                                                          | clear the queue of outstanding tasks by priority                                                 |
+| v2.0    | Inventory Manager | export a list of all high priority tasks to a readable format, e.g CSV           | print a physical checklist for warehouse associates who do not have access to the CLI            |
+| v2.0    | Inventory Manager | search for a specific SKU id                                                     | quickly audit all pending actions for a specific product that might be under inspection / recall |
+| v2.0    | Inventory Manager | edit the description of an existing task                                         | update information efficiently                                                                   |
+| v2.0    | Inventory Manager | conduct an analysis on a SKU                                                     | for reporting and analytics to colleagues                                                        |
 
 ## Appendix C: Non-Functional Requirements
 
@@ -626,7 +628,20 @@ Enterprise systems are often slow and rigid. ItemTracker provides an agile, loca
 
 ## Appendix D: Glossary
 
-* *glossary item* - Definition
+* *AB3* - AddressBook-Level3, a sample application created by the SE-EDU initiative, used as a foundational architecture for this project.
+* *CI* - Continuous Integration, the practice of automating the integration of code changes into a shared repository, often using tools like GitHub Actions.
+* *CLI* - Command-Line Interface, a text-based interface used to interact with software by typing commands.
+* *CSV* - Comma-Separated Values, a plain text file format used to store tabular data.
+* *GUI* - Graphical User Interface, a visual way of interacting with a computer using items such as windows, icons, and menus.
+* *I/O* - Input/Output, referring to the communication between the application and the local file system (e.g., reading/writing files).
+* *JSON* - JavaScript Object Notation, a lightweight, text-based, human-readable data interchange format used by the Storage component to save the warehouse state.
+* *OS* - Operating System, the system software that manages computer hardware and software resources (e.g., Windows, Linux, macOS).
+* *Regex* - Regular Expression, a sequence of characters that specifies a search pattern, used in this project for strict input and date validation.
+* *SKU* - Stock Keeping Unit, a unique identifier used to track specific inventory items or pallets within the warehouse.
+* *SLAP* - Single Level of Abstraction Principle, a software engineering principle stating that all statements within a method should operate at the same level of abstraction.
+* *SRP* - Single Responsibility Principle, a software design principle stating that a class or module should have one, and only one, reason to change (e.g., a handler managing only one type of command).
+* *UI* - User Interface, the space where interactions between humans and the application occur.
+* *UML* - Unified Modeling Language, a general-purpose modeling language used to visualize the design and architecture of the system.
 
 ## Appendix E: Instructions for Manual Testing
 

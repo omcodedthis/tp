@@ -1,0 +1,28 @@
+@startuml
+!include ../style.puml
+skinparam arrowThickness 1.1
+skinparam classAttributeIconSize 0
+hide circle
+
+package Command {
+    class CommandRunner LOGIC_COLOR
+    class SKUCommandHandler LOGIC_COLOR
+}
+
+package Sku {
+    class SKUList MODEL_COLOR
+    class SKU MODEL_COLOR
+    class SKUTaskList MODEL_COLOR
+    enum Location MODEL_COLOR
+}
+
+CommandRunner *--> "1" SKUCommandHandler : routes to >
+SKUCommandHandler --> "1" SKUList : modifies >
+
+SKUList --> "*" SKU : contains >
+
+SKU --> "1" SKUTaskList : encapsulates >
+
+SKU --> "1" Location : located at >
+
+@enduml

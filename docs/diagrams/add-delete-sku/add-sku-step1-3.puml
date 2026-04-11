@@ -1,0 +1,21 @@
+@startuml
+!include ../style.puml
+skinparam arrowThickness 1.1
+skinparam classAttributeIconSize 0
+hide circle
+
+title System Memory State (Steps 1 to 3)
+
+class "<u>cmd:ParsedCommand</u>" as cmd {
+    commandWord = "addsku"
+    args = {"n": "PALLET-A", "l": "A1"}
+}
+
+class "<u>skuHandler:SKUCommandHandler</u>" as handler
+
+class "<u>skuList:SKUList</u>" as skuList
+
+handler -right-> cmd : reads properties from >
+handler -down-> skuList : searches for duplicates in >
+
+@enduml

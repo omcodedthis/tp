@@ -1,0 +1,67 @@
+@startuml
+!include ../style.puml
+skinparam arrowThickness 1.1
+skinparam classAttributeIconSize 0
+hide circle
+
+participant ":CommandRunner" as runner LOGIC_COLOR
+participant ":SKUCommandHandler" as skuHandler LOGIC_COLOR
+participant "<<class>>\nCommandHelper" as commandHelper LOGIC_COLOR
+
+participant ":SKUList" as skuList MODEL_COLOR
+participant "sku:SKU" as sku MODEL_COLOR
+participant "skuTaskList:SKUTaskList" as taskList MODEL_COLOR
+
+participant ":Ui" as ui UI_COLOR
+
+[-> runner : run(cmd)
+activate runner LOGIC_COLOR
+
+runner -> skuHandler : handleAddSku(cmd)
+activate skuHandler LOGIC_COLOR
+
+skuHandler -> commandHelper : parseLocation("A1")
+activate commandHelper LOGIC_COLOR
+commandHelper --> skuHandler : Location.A1
+deactivate commandHelper
+
+skuHandler -> skuList : findByID("PALLET-A")
+activate skuList MODEL_COLOR
+skuList --> skuHandler : null
+deactivate skuList
+
+skuHandler -> skuList : addSKU("PALLET-A", Location.A1)
+activate skuList MODEL_COLOR
+
+skuList -> skuList : findByID("PALLET-A")
+activate skuList MODEL_COLOR
+skuList --> skuList : null
+deactivate skuList
+
+create sku
+skuList -> sku
+activate sku MODEL_COLOR
+
+create taskList
+sku -> taskList
+activate taskList MODEL_COLOR
+taskList --> sku
+deactivate taskList
+
+sku --> skuList
+deactivate sku
+
+skuList --> skuHandler
+deactivate skuList
+
+skuHandler -> ui : printSuccess(...)
+activate ui UI_COLOR
+ui --> skuHandler
+deactivate ui
+
+skuHandler --> runner
+deactivate skuHandler
+
+[<-- runner
+deactivate runner
+@enduml

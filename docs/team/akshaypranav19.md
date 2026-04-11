@@ -112,7 +112,6 @@ dates like Feb 30). Reused across the codebase by other handlers as well.
 
 
 ### Contributions to the User Guide
-
 1. **FAQ section**: Wrote 1 question covering multi-field task editing with `edittask`
 2. **Command Summary table**: Full cheat sheet of all 16 commands with format and examples
 
@@ -151,7 +150,7 @@ dates like Feb 30). Reused across the codebase by other handlers as well.
 
 ItemTasker follows a layered architecture with clear separation of concerns:
 
-![Architecture Diagram](../plantUML/architecture.png)
+![Architecture Diagram](../diagrams/architecture.png)
 
 - **Ui** handles all user interface interactions
 - **Parser** transforms raw input into structured `ParsedCommand` objects
@@ -189,9 +188,9 @@ Given below is an example usage scenario for the Edit SKU mechanism.
 
 **Step 5.** `SKU#setLocation(Location.C3)` is called, updating the SKU's location in place. All existing tasks attached to the SKU are preserved.
 
-![Edit SKU Sequence Diagram](../plantUML/edit-sku/edit-sku-sequence.png)
+![Edit SKU Sequence Diagram](../diagrams/edit-sku/edit-sku-sequence.png)
 
-![Edit SKU Architecture Class Diagram](../plantUML/edit-sku/edit-sku-architecture.png)
+![Edit SKU Architecture Class Diagram](../diagrams/edit-sku/edit-sku-architecture.png)
 
 #### Edit Task
 
@@ -210,9 +209,9 @@ Given below is an example usage scenario for the Edit SKU mechanism.
 
 **Step 4.** Only after all validations pass, the handler calls `SKUTaskList#editSKUTask()`. Unchanged fields are preserved.
 
-![Edit Task Sequence Diagram](../plantUML/edit-task/edit-task-sequence.png)
+![Edit Task Sequence Diagram](../diagrams/edit-task/edit-task-sequence.png)
 
-![Edit Task Architecture Class Diagram](../plantUML/edit-task/edit-task-architecture.png)
+![Edit Task Architecture Class Diagram](../diagrams/edit-task/edit-task-architecture.png)
 
 
 ---
