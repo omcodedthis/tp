@@ -135,6 +135,11 @@ public class TaskCommandHandler {
             return;
         }
 
+        if (newDesc != null && newDesc.isEmpty()) {
+            Ui.printError("Description cannot be blank. Use t/<description> with a non-empty value.");
+            return;
+        }
+
         if (newDate != null) {
             newDate = DateValidator.validateDateOrError(newDate);
             if (newDate == null) {
@@ -357,7 +362,7 @@ public class TaskCommandHandler {
 
         if (skuId == null || sortField == null) {
             LOGGER.log(Level.WARNING, "Sort command missing required arguments.");
-            Ui.printError("Usage: sorttasks n/SKU_ID s/date|priority|status [o/asc|desc]");
+            Ui.printError("Usage: sorttasks n/SKU_ID s/date|priority|status [o/ascending|descending]");
             return;
         }
 
@@ -376,7 +381,18 @@ public class TaskCommandHandler {
         }
 
         String orderStr = cmd.hasArg("o") ? cmd.getArg("o") : "ascending";
-        boolean ascending = !orderStr.toLowerCase().startsWith("desc");
+        String orderLower = orderStr.trim().toLowerCase();
+        boolean ascending;
+        if (orderLower.equals("ascending")) {
+            ascending = true;
+        } else if (orderLower.equals("descending")) {
+            ascending = false;
+        } else {
+            LOGGER.log(Level.WARNING, "Invalid sort order provided: " + orderStr);
+            Ui.printError("Invalid order '" + orderStr
+                    + "'. Must be 'ascending' or 'descending'.");
+            return;
+        }
 
         SKUTaskList taskList = targetSku.getSKUTaskList();
         assert taskList != null : "Internal Error: SKUTaskList should never be null";
@@ -389,9 +405,13 @@ public class TaskCommandHandler {
             assert sorted.size() == tasks.size()
                     : "Sorted result size must match original task count";
 
+            ArrayList<SKUTask> underlying = taskList.getSKUTaskList();
+            underlying.clear();
+            underlying.addAll(sorted);
+
             LOGGER.log(Level.INFO, "Successfully sorted " + sorted.size() + " tasks for SKU ["
-                    + skuId + "] by " + sortField + " (" + orderStr + ")");
-            Ui.printSortedTasks(skuId, sortField, orderStr, sorted);
+                    + skuId + "] by " + sortField + " (" + orderLower + ")");
+            Ui.printSortedTasks(skuId, sortField, orderLower, sorted);
         } catch (IllegalArgumentException e) {
             LOGGER.log(Level.SEVERE, "Sort failed due to invalid data in SKU [" + skuId + "]", e);
             Ui.printError("Failed to sort tasks: " + e.getMessage());
