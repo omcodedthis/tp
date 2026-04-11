@@ -131,7 +131,9 @@ __________________________________________________________________________
 >  Search results:
 __________________________________________________________________________
  [ERROR] Task index 99 is out of range for SKU: PALLET-A
->  [ERROR] Usage: find [n/SKU_ID] [t/DESCRIPTION] [i/TASK_INDEX]
+>  Search results:
+__________________________________________________________________________
+ [ERROR] Usage: find [n/SKU_ID] [t/DESCRIPTION] [i/TASK_INDEX]
 > >  [OK] Deleted task #2 from SKU [PALLET-A].
 >  [ERROR] Task index 99 is out of range for SKU: PALLET-A
 >  [OK] Deleted SKU [PALLET-B] and all its tasks.

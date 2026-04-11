@@ -36,12 +36,16 @@ public class ViewCommandHandler {
     }
 
     /**
-     * Dispatches to the appropriate listing sub-method based on the provided filter flag.
-     * Validates that only one filter (n/, p/, or l/) is used and that flags are recognized.
+     * Dispatches to the appropriate listing sub-method based on the provided filter
+     * flag.
+     * Validates that only one filter (n/, p/, or l/) is used and that flags are
+     * recognized.
      *
      * @param cmd The parsed command containing optional filter arguments.
-     * @throws MultipleFilterException If more than one filter flag is provided (e.g., n/ and p/).
-     * @throws InvalidFilterException  If an unrecognized flag is detected (e.g., h/).
+     * @throws MultipleFilterException If more than one filter flag is provided
+     *                                 (e.g., n/ and p/).
+     * @throws InvalidFilterException  If an unrecognized flag is detected (e.g.,
+     *                                 h/).
      */
     public void handleListTasks(ParsedCommand cmd) throws MultipleFilterException, InvalidFilterException {
         assert cmd != null : "ParsedCommand should not be null";
@@ -73,11 +77,11 @@ public class ViewCommandHandler {
 
         if (filterCount > 1) {
             logger.log(Level.WARNING, "Multiple filters provided: SKU={0}, Priority={1}, Location={2}",
-                    new Object[]{skuFilter, priorityFilter, locationFilter});
+                    new Object[] { skuFilter, priorityFilter, locationFilter });
             throw new MultipleFilterException("Conflict: You can only use ONE filter (n/, p/, or l/) at a time.");
         }
         logger.log(Level.INFO, "Listing tasks. Filters -> SKU: {0}, Priority: {1}, Location: {2}",
-                new Object[]{skuFilter, priorityFilter, locationFilter});
+                new Object[] { skuFilter, priorityFilter, locationFilter });
         if (skuFilter != null) {
             listTasksForSku(skuFilter);
         } else if (priorityFilter != null) {
@@ -174,7 +178,7 @@ public class ViewCommandHandler {
      *
      * @param cmd The parsed command containing an optional n/ SKU filter.
      */
-    public void handleStatus(ParsedCommand cmd) throws InvalidFilterException{
+    public void handleStatus(ParsedCommand cmd) throws InvalidFilterException {
         assert cmd != null : "ParsedCommand should not be null";
 
         for (String flag : cmd.getAllFlags()) {
@@ -211,8 +215,7 @@ public class ViewCommandHandler {
         }
     }
 
-
-    //@@author heehaw1234
+    // @@author heehaw1234
     // ========== find — validate, search, display (SLAP) ==========
 
     /**
@@ -224,8 +227,10 @@ public class ViewCommandHandler {
      *
      * @param cmd The parsed command containing the filter flags.
      * @throws MissingArgumentException If no filter flags are provided.
-     * @throws SKUNotFoundException     If the specified SKU does not exist in the warehouse.
-     * @throws InvalidIndexException    If the task index is not a valid number or is out of range.
+     * @throws SKUNotFoundException     If the specified SKU does not exist in the
+     *                                  warehouse.
+     * @throws InvalidIndexException    If the task index is not a valid number or
+     *                                  is out of range.
      */
     public void handleFind(ParsedCommand cmd) throws MissingArgumentException, SKUNotFoundException,
             InvalidIndexException {
@@ -236,8 +241,9 @@ public class ViewCommandHandler {
         String indexStr = cmd.getArg("i");
 
         logger.log(Level.INFO, "Find command invoked. SKU={0}, Desc={1}, Index={2}",
-                new Object[]{skuFilter, descFilter, indexStr});
+                new Object[] { skuFilter, descFilter, indexStr });
 
+        Ui.printSearchHeader();
         validateFindArgs(skuFilter, descFilter, indexStr);
 
         int taskIndex = -1;
@@ -249,7 +255,6 @@ public class ViewCommandHandler {
             }
         }
 
-        Ui.printSearchHeader();
         List<String> results = searchTasks(skuFilter, descFilter, taskIndex);
         logger.log(Level.INFO, "Find returned {0} results", results.size());
         Ui.printSearchFooter(results);
@@ -285,7 +290,8 @@ public class ViewCommandHandler {
      * @param descFilter The description keyword filter, or null to match all.
      * @param taskIndex  The 1-based task index filter, or -1 to search all indices.
      * @return A list of pre-formatted result strings for matching tasks.
-     * @throws InvalidIndexException If the index is out of range for a filtered SKU.
+     * @throws InvalidIndexException If the index is out of range for a filtered
+     *                               SKU.
      */
     private List<String> searchTasks(String skuFilter, String descFilter, int taskIndex)
             throws InvalidIndexException {
@@ -307,19 +313,22 @@ public class ViewCommandHandler {
      *
      * @param sku          The SKU to search within.
      * @param descFilter   The description keyword filter, or null to match all.
-     * @param taskIndex    The 1-based task index filter, or -1 to search all indices.
-     * @param hasSkuFilter Whether the user specified a SKU filter (affects error behaviour).
+     * @param taskIndex    The 1-based task index filter, or -1 to search all
+     *                     indices.
+     * @param hasSkuFilter Whether the user specified a SKU filter (affects error
+     *                     behaviour).
      * @param results      The accumulator list for formatted result strings.
-     * @throws InvalidIndexException If the index is out of range and a SKU filter was specified.
+     * @throws InvalidIndexException If the index is out of range and a SKU filter
+     *                               was specified.
      */
     private void searchTasksInSku(SKU sku, String descFilter, int taskIndex,
-                                  boolean hasSkuFilter, List<String> results) throws InvalidIndexException {
+            boolean hasSkuFilter, List<String> results) throws InvalidIndexException {
         assert sku != null : "SKU should not be null";
         assert results != null : "Results list should not be null";
 
         ArrayList<SKUTask> tasks = sku.getSKUTaskList().getSKUTaskList();
         logger.log(Level.FINE, "Searching SKU {0} with {1} tasks",
-                new Object[]{sku.getSKUID(), tasks.size()});
+                new Object[] { sku.getSKUID(), tasks.size() });
 
         if (taskIndex > 0) {
             searchByIndex(sku, tasks, descFilter, taskIndex, hasSkuFilter, results);
@@ -337,23 +346,24 @@ public class ViewCommandHandler {
      * @param taskIndex    The 1-based task index to look up.
      * @param hasSkuFilter Whether the user specified a SKU filter.
      * @param results      The accumulator list for formatted result strings.
-     * @throws InvalidIndexException If the index is out of range and a SKU filter was specified.
+     * @throws InvalidIndexException If the index is out of range and a SKU filter
+     *                               was specified.
      */
     private void searchByIndex(SKU sku, ArrayList<SKUTask> tasks, String descFilter,
-                               int taskIndex, boolean hasSkuFilter, List<String> results)
+            int taskIndex, boolean hasSkuFilter, List<String> results)
             throws InvalidIndexException {
         assert taskIndex > 0 : "Task index must be positive, got: " + taskIndex;
         logger.log(Level.FINE, "Searching by index {0} in SKU {1}",
-                new Object[]{taskIndex, sku.getSKUID()});
+                new Object[] { taskIndex, sku.getSKUID() });
 
         if (taskIndex > tasks.size()) {
             if (hasSkuFilter) {
                 logger.log(Level.WARNING, "Task index {0} out of range for SKU {1} (size: {2})",
-                        new Object[]{taskIndex, sku.getSKUID(), tasks.size()});
+                        new Object[] { taskIndex, sku.getSKUID(), tasks.size() });
                 throw new InvalidIndexException(taskIndex, sku.getSKUID());
             } else {
                 logger.log(Level.FINE, "Skipping SKU {0} (size: {1}) as task index {2} is out of bounds",
-                        new Object[]{sku.getSKUID(), tasks.size(), taskIndex});
+                        new Object[] { sku.getSKUID(), tasks.size(), taskIndex });
             }
             return;
         }
@@ -376,7 +386,7 @@ public class ViewCommandHandler {
         assert sku != null : "SKU should not be null";
         assert tasks != null : "Task list should not be null for SKU: " + sku.getSKUID();
         logger.log(Level.FINE, "Searching all {0} tasks in SKU {1}",
-                new Object[]{tasks.size(), sku.getSKUID()});
+                new Object[] { tasks.size(), sku.getSKUID() });
 
         for (int i = 0; i < tasks.size(); i++) {
             SKUTask task = tasks.get(i);
