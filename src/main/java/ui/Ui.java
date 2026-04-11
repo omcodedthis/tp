@@ -267,6 +267,15 @@ public class Ui {
     //@@author AkshayPranav19
 
     /**
+     * Prints a non-blocking warning message prefixed with [WARNING].
+     *
+     * @param message Warning detail message.
+     */
+    public static void printWarning(String message) {
+        System.out.println(" [WARNING] " + message);
+    }
+
+    /**
      * Prints a sorted list of tasks for a specific SKU.
      *
      * @param skuId The SKU identifier for the header.
