@@ -1,33 +1,15 @@
-@startuml
+﻿import os
+
+files = {
+    'docs/diagrams/command/commandRunnerSequence-runSku.puml': '''@startuml
 !include ../style.puml
 
 Participant "Main" as main LOGIC_COLOR
 Participant ":CommandRunner" as runner LOGIC_COLOR
 Participant ":ParsedCommand" as cmd LOGIC_COLOR_T1
 Participant ":SKUCommandHandler" as skuHandler LOGIC_COLOR_T2
-Participant ":TaskCommandHandler" as taskHandler LOGIC_COLOR_T2
-Participant ":ViewCommandHandler" as viewHandler LOGIC_COLOR_T2
-Participant ":Storage" as storage STORAGE_COLOR
-Participant ":ViewMap" as viewMap UI_COLOR
-Participant ":Ui" as ui UI_COLOR
 
-== Constructor ==
-
-main -> runner ++ : new CommandRunner(skuList)
-
-runner -> runner ++ : new SKUCommandHandler(skuList)
-return
-runner -> runner ++ : new TaskCommandHandler(skuList)
-return
-runner -> runner ++ : new ViewCommandHandler(skuList)
-return
-
-runner -> storage ++ : loadState(skuList)
-return
-
-return
-
-== run — SKU commands ==
+== run - SKU commands ==
 
 main -> runner ++ : run(cmd)
 
@@ -47,8 +29,18 @@ else
 end
 
 return
+@enduml
+''',
+    
+    'docs/diagrams/command/commandRunnerSequence-runTask.puml': '''@startuml
+!include ../style.puml
 
-== run — Task commands ==
+Participant "Main" as main LOGIC_COLOR
+Participant ":CommandRunner" as runner LOGIC_COLOR
+Participant ":ParsedCommand" as cmd LOGIC_COLOR_T1
+Participant ":TaskCommandHandler" as taskHandler LOGIC_COLOR_T2
+
+== run - Task commands ==
 
 main -> runner ++ : run(cmd)
 
@@ -77,8 +69,21 @@ else
 end
 
 return
+@enduml
+''',
 
-== run — View / Utility commands ==
+    'docs/diagrams/command/commandRunnerSequence-runView.puml': '''@startuml
+!include ../style.puml
+
+Participant "Main" as main LOGIC_COLOR
+Participant ":CommandRunner" as runner LOGIC_COLOR
+Participant ":ParsedCommand" as cmd LOGIC_COLOR_T1
+Participant ":ViewCommandHandler" as viewHandler LOGIC_COLOR_T2
+Participant ":Storage" as storage STORAGE_COLOR
+Participant ":ViewMap" as viewMap UI_COLOR
+Participant ":Ui" as ui UI_COLOR
+
+== run - View / Utility commands ==
 
 main -> runner ++ : run(cmd)
 
@@ -117,18 +122,11 @@ else
 end
 
 return
-
-== handleExport ==
-
-runner -> runner ++ : handleExport()
-
-runner -> runner : Export.exportToTextFile(skuList)
-
-alt success
-    runner -> ui : printSuccess("Warehouse state exported ...")
-else IOException
-    runner -> ui : printError("Failed to export data: ...")
-end
-
-return
 @enduml
+'''
+}
+
+for p, c in files.items():
+    with open(p, 'w', encoding='utf-8') as f:
+        f.write(c)
+    print(f"Created {p}")

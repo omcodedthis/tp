@@ -120,8 +120,9 @@ Export ..> SKUList
 
 
 ' -- Model layer --
-SKUList -down-> "*" SKU
-SKU -down-> "1" SKUTaskList
-SKUTaskList -down-> "*" SKUTask
+SKUList "1" -down-> "*" SKU : contains >
+SKU "1" -down-> "1" SKUTaskList : encapsulates >
+SKU "1" -down-> "1" Location : located at >
+SKUTaskList "1" -down-> "*" SKUTask : contains >
 
 @enduml
