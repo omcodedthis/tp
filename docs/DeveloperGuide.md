@@ -88,9 +88,9 @@ use literal lowercase strings in comparisons.
 
 The sequence diagrams below illustrate the dispatch lifecycles for the different categories of commands:
 
-**Command Dispatch Sequence for SKU commands**
-
 <div style="page-break-after: always;"></div>
+
+**Command Dispatch Sequence for SKU commands**
 
 ![CommandRunner Sequence Diagram — SKU commands](diagrams/command/commandRunnerSequence-runSku.png)
 
@@ -99,6 +99,8 @@ The sequence diagrams below illustrate the dispatch lifecycles for the different
 **Command Dispatch Sequence for Task commands**
 
 ![CommandRunner Sequence Diagram — Task commands](diagrams/command/commandRunnerSequence-runTask.png)
+
+<div style="page-break-after: always;"></div>
 
 **Command Dispatch Sequence for View / Utility commands**
 
@@ -111,6 +113,8 @@ The sequence diagrams below illustrate the dispatch lifecycles for the different
 Handles the three SKU-level mutations: `addsku`, `editsku`, and `deletesku`. Each method validates that mandatory flags (`n/` and, where required, `l/`) are present before delegating to `CommandHelper` for enum parsing and SKU lookup. Duplicate-ID detection on `addsku` and not-found detection on `deletesku` are handled at this layer before any model mutation occurs.
 
 The sequence diagram below illustrates the interactions for the `addsku` command:
+
+<div style="page-break-after: always;"></div>
 
 **Interactions Inside the Command Component for the `addsku` Command**
 
@@ -129,13 +133,19 @@ The `TaskCommandHandler` intentionally treats empty `t/` arguments differently b
 
 The sequence diagrams below illustrate key interactions within `TaskCommandHandler`:
 
+<div style="page-break-after: always;"></div>
+
 **Interactions Inside the Command Component for the `addskutask` Command**
 
 ![SKU Task Command Sequence Diagram](diagrams/command/addskutask-command-sequence.png)
 
+<div style="page-break-after: always;"></div>
+
 **Interactions Inside the Command Component for the `edittask` Command**
 
 ![Edit Task Command Sequence Diagram](diagrams/command/edittask-command-sequence.png)
+
+<div style="page-break-after: always;"></div>
 
 **Interactions Inside the Command Component for the `marktask` / `unmarktask` Commands**
 
@@ -149,9 +159,13 @@ Handles the three read-only commands: `listtasks`, `find`, and `status`. Like al
 
 The sequence diagrams below illustrate key read paths in `ViewCommandHandler`:
 
+<div style="page-break-after: always;"></div>
+
 **Interactions Inside the Command Component for the `listtasks` Command**
 
 ![List Tasks Sequence Diagram](diagrams/command/listtasks-sequence.png)
+
+<div style="page-break-after: always;"></div>
 
 **Interactions Inside the Command Component for the `find` Command**
 
@@ -259,6 +273,8 @@ Here are the other interactions in the SKUTask component (omitted from the seque
 **Property Retrieval (Getters)**
 
 ![Getters Sequence Diagram](diagrams/skutask-operations/gettersSequence.png)
+
+<div style="page-break-after: always;"></div>
 
 **Task Deletion**
 
@@ -371,6 +387,8 @@ The following sequence diagram shows the flow of adding a SKU:
 
 ![Sequence Diagram](diagrams/add-delete-sku/add-sku-sequence.png)
 
+<div style="page-break-after: always;"></div>
+
 The following class diagram shows the architecture:
 
 ![Class Diagram](diagrams/add-delete-sku/add-sku-architecture.png)
@@ -411,13 +429,19 @@ Given below is an example usage scenario demonstrating how the Add SKU Task mech
 
 *Note: The delete operation follows a nearly identical traversal, except `TaskCommandHandler#handleDeleteTask()` parses the target index instead of properties, and delegates to `SKUTaskList#deleteSKUTaskByIndex()`.*
 
+<div style="page-break-after: always;"></div>
+
 The following sequence diagram shows the end-to-end flow of adding a SKU Task:
 
 ![Add SKU Task Sequence Diagram](diagrams/skutask-operations/addTaskSequence.png)
 
+<div style="page-break-after: always;"></div>
+
 The following sequence diagram shows the end-to-end flow of deleting a SKU Task:
 
 ![Delete SKU Task Sequence Diagram](diagrams/skutask-operations/deleteTaskSequence.png)
+
+<div style="page-break-after: always;"></div>
 
 ### Task Property Access (Setters & Getters)
 
@@ -511,6 +535,8 @@ The following sequence diagram shows the flow of editing a task:
 
 ![Edit Task Sequence Diagram](diagrams/edit-task/edit-task-sequence.png)
 
+<div style="page-break-after: always;"></div>
+
 The following class diagram shows the architecture:
 
 ![Edit Task Architecture Class Diagram](diagrams/edit-task/edit-task-architecture.png)
@@ -568,10 +594,14 @@ This scenario demonstrates the dual-loop process. The first loop gathers tasks f
 
 ![View SKU Task (Distance) Sequence Diagram](diagrams/viewSKUTask-operations/viewSKUTask-distanceSequence.png)
 
+<div style="page-break-after: always;"></div>
+
 **Scenario 2: Priority Filtering (`listtasks p/HIGH`)**
 In this flow, only the initial Gathering loop is required to populate the task list. The filtering happens internally within the viewer.
 
 ![View SKU Task (Priority) Sequence Diagram](diagrams/viewSKUTask-operations/viewSKUTask-prioritySequence.png)
+
+<div style="page-break-after: always;"></div>
 
 **Scenario 3: SKU ID Filtering (`listtasks n/A123`)**
 Similar to priority filtering, the viewer gathers all tasks via the hierarchy loop and then applies an internal string-match filter for the SKU ID.

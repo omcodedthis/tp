@@ -8,12 +8,12 @@ Participant ":CommandHelper" as helper LOGIC_COLOR_T1
 Participant ":SKUList" as skuList MODEL_COLOR
 Participant ":Ui" as ui UI_COLOR
 
-== handleFind — validation ==
+== handleFind - validation ==
 
 runner -> handler ++ : handleFind(cmd)
 
 handler -> cmd ++ : getArg()
-note right : called 3 times — getArg("n"), getArg("t"), getArg("i")\nn/SKU filter, t/description filter, i/index filter — all optional
+note right : called 3 times - getArg("n"), getArg("t"), getArg("i")\nn/SKU filter, t/description filter, i/index filter - all optional
 return skuFilter, descFilter, indexStr
 
 handler -> ui : printSearchHeader()
@@ -40,7 +40,7 @@ opt indexStr != null
     return taskIndex
 end
 
-== handleFind — search ==
+== handleFind - search ==
 
 handler -> handler ++ : searchTasks(skuFilter, descFilter, taskIndex)
 
